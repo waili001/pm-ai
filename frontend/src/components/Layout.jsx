@@ -1,0 +1,132 @@
+import { useState } from 'react';
+import {
+    Box,
+    CssBaseline,
+    Drawer,
+    AppBar,
+    Toolbar,
+    List,
+    Typography,
+    Divider,
+    ListItem,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText,
+    Collapse
+} from '@mui/material';
+import {
+    Menu as MenuIcon,
+    Dashboard,
+    AdminPanelSettings,
+    Storage,
+    ExpandLess,
+    ExpandMore,
+
+    Settings,
+    Assignment
+} from '@mui/icons-material';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+
+const drawerWidth = 240;
+
+export default function Layout() {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [adminOpen, setAdminOpen] = useState(true);
+
+    const handleAdminClick = () => {
+        setAdminOpen(!adminOpen);
+    };
+
+    return (
+        <Box sx={{ display: 'flex' }}>
+            <CssBaseline />
+            <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                <Toolbar>
+                    <Typography variant="h6" noWrap component="div">
+                        PM AI Dashboard
+                    </Typography>
+                </Toolbar>
+            </AppBar>
+            <Drawer
+                variant="permanent"
+                sx={{
+                    width: drawerWidth,
+                    flexShrink: 0,
+                    [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+                }}
+            >
+                <Toolbar />
+                <Box sx={{ overflow: 'auto' }}>
+                    <List>
+                        <ListItem disablePadding>
+                            <ListItemButton
+                                selected={location.pathname === '/'}
+                                onClick={() => navigate('/')}
+                            >
+                                <ListItemIcon>
+                                    <Dashboard />
+                                </ListItemIcon>
+                                <ListItemText primary="Home" />
+                            </ListItemButton>
+                        </ListItem>
+
+
+
+                        <ListItem disablePadding>
+                            <ListItemButton
+                                selected={location.pathname === '/tp-status'}
+                                onClick={() => navigate('/tp-status')}
+                            >
+                                <ListItemIcon>
+                                    <Assignment />
+                                </ListItemIcon>
+                                <ListItemText primary="TP Status" />
+                            </ListItemButton>
+                        </ListItem>
+
+                        <ListItem disablePadding>
+                            <ListItemButton onClick={handleAdminClick}>
+                                <ListItemIcon>
+                                    <AdminPanelSettings />
+                                </ListItemIcon>
+                                <ListItemText primary="Admin" />
+                                {adminOpen ? <ExpandLess /> : <ExpandMore />}
+                            </ListItemButton>
+                        </ListItem>
+
+                        <Collapse in={adminOpen} timeout="auto" unmountOnExit>
+                            <List component="div" disablePadding>
+                                <ListItemButton
+                                    sx={{ pl: 4 }}
+                                    selected={location.pathname === '/admin/sqlite'}
+                                    onClick={() => navigate('/admin/sqlite')}
+                                >
+                                    <ListItemIcon>
+                                        <Storage />
+                                    </ListItemIcon>
+                                    <ListItemText primary="SQLite" />
+                                </ListItemButton>
+                                <ListItemButton
+                                    sx={{ pl: 4 }}
+                                    selected={location.pathname === '/admin/jobs'}
+                                    onClick={() => navigate('/admin/jobs')}
+                                >
+                                    <ListItemIcon>
+                                        <Settings />
+                                    </ListItemIcon>
+                                    <ListItemText primary="Job Configuration" />
+                                </ListItemButton>
+
+                            </List>
+                        </Collapse>
+                    </List>
+                </Box>
+            </Drawer >
+            <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+                <Toolbar />
+                <Outlet />
+            </Box>
+        </Box >
+    );
+}

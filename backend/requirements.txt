@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+lark-oapi
+python-dotenv
+sqlalchemy
+APScheduler

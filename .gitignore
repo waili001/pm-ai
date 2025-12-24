@@ -1,0 +1,16 @@
+# General
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.log
+
+# Backend
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.env
+backend/.pytest_cache/
+backend/dist/
+backend/build/
+backend/*.egg-info/
