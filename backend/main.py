@@ -187,7 +187,7 @@ def get_tcg_tickets_by_tp(tp_number: str):
                 "reporter": t.reporter,
                 "issue_type": t.issue_type,
                 "status": t.jira_status, # For Kanban grouping
-                "description": t.values # Assuming 'Values' might hold description or similar, checked schema 'Values' exists
+                "description": t.description  # Description field
             })
             
         return results

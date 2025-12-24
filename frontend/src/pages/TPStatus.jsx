@@ -19,10 +19,20 @@ import {
     Switch,
     FormControlLabel,
     Divider,
-    Link
+    Link,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText
 } from '@mui/material';
+import { parseJiraMarkup } from '../utils/jiraMarkup';
+import { JiraMarkupRenderer } from '../utils/JiraMarkupRenderer';
 
 const STATUS_ORDER = ["Open", "To Do", "In Progress", "In Review", "Resolved", "Closed"];
+
+const STORAGE_KEY = 'tp_kanban_last_selected';
+const HISTORY_STORAGE_KEY = 'tp_kanban_recent_history';
+const MAX_HISTORY = 10;
 
 export default function TPStatus() {
     const [activeTPs, setActiveTPs] = useState([]);
@@ -30,6 +40,7 @@ export default function TPStatus() {
     const [tickets, setTickets] = useState([]);
     const [loadingTPs, setLoadingTPs] = useState(false);
     const [loadingTickets, setLoadingTickets] = useState(false);
+    const [recentHistory, setRecentHistory] = useState([]);
 
     // Filter State
     const [hideDev, setHideDev] = useState(false);
@@ -37,6 +48,33 @@ export default function TPStatus() {
     // Dialog State
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedTicket, setSelectedTicket] = useState(null);
+
+    // Load recent history from localStorage
+    useEffect(() => {
+        const stored = localStorage.getItem(HISTORY_STORAGE_KEY);
+        if (stored) {
+            try {
+                setRecentHistory(JSON.parse(stored));
+            } catch (e) {
+                console.error('Failed to parse history', e);
+            }
+        }
+    }, []);
+
+    // Function to add TP to recent history
+    const addToHistory = (tp) => {
+        if (!tp || !tp.id) return;
+
+        setRecentHistory(prev => {
+            // Remove if already exists
+            const filtered = prev.filter(item => item.id !== tp.id);
+            // Add to front
+            const updated = [tp, ...filtered].slice(0, MAX_HISTORY);
+            // Save to localStorage
+            localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(updated));
+            return updated;
+        });
+    };
 
     // Fetch Active TPs on Mount
     useEffect(() => {
@@ -46,6 +84,15 @@ export default function TPStatus() {
             .then(data => {
                 if (Array.isArray(data)) {
                     setActiveTPs(data);
+
+                    // Restore last selected TP from localStorage
+                    const savedId = localStorage.getItem(STORAGE_KEY);
+                    if (savedId) {
+                        const savedTP = data.find(tp => tp.id === savedId);
+                        if (savedTP) {
+                            setSelectedTP(savedTP);
+                        }
+                    }
                 }
                 setLoadingTPs(false);
             })
@@ -58,6 +105,11 @@ export default function TPStatus() {
     // Fetch Tickets when TP Selected
     useEffect(() => {
         if (selectedTP && selectedTP.ticket_number) {
+            // Save to localStorage
+            localStorage.setItem(STORAGE_KEY, selectedTP.id);
+            // Add to recent history
+            addToHistory(selectedTP);
+
             setLoadingTickets(true);
             fetch(`http://127.0.0.1:8000/api/tp/${selectedTP.ticket_number}/tcg_tickets`)
                 .then(res => res.json())
@@ -113,7 +165,7 @@ export default function TPStatus() {
         <Container maxWidth={false}>
             <Box sx={{ my: 4 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
-                    TP Status Board
+                    TP Kanban
                 </Typography>
 
                 {/* TP Selector & Filter */}
@@ -150,6 +202,27 @@ export default function TPStatus() {
                             />
                         </Box>
                     </Box>
+
+                    {/* Recent History */}
+                    {recentHistory.length > 0 && (
+                        <Box sx={{ mt: 2 }}>
+                            <Typography variant="caption" color="text.secondary" gutterBottom>
+                                Recent Viewed (Click to select)
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+                                {recentHistory.map((tp) => (
+                                    <Chip
+                                        key={tp.id}
+                                        label={tp.ticket_number}
+                                        onClick={() => setSelectedTP(tp)}
+                                        size="small"
+                                        variant={selectedTP?.id === tp.id ? "filled" : "outlined"}
+                                        color={selectedTP?.id === tp.id ? "primary" : "default"}
+                                    />
+                                ))}
+                            </Box>
+                        </Box>
+                    )}
                 </Paper>
 
                 {/* Kanban Board */}
@@ -251,11 +324,9 @@ export default function TPStatus() {
                     <Divider sx={{ my: 1 }} />
 
                     <Typography variant="caption" color="text.secondary" gutterBottom>
-                        Description / Values
+                        Description
                     </Typography>
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                        {selectedTicket?.description || "No description provided."}
-                    </Typography>
+                    <JiraMarkupRenderer text={selectedTicket?.description} />
 
                 </DialogContent>
                 <DialogActions>

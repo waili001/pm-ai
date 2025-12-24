@@ -81,7 +81,7 @@ export default function Layout() {
                                 <ListItemIcon>
                                     <Assignment />
                                 </ListItemIcon>
-                                <ListItemText primary="TP Status" />
+                                <ListItemText primary="TP Kanban" />
                             </ListItemButton>
                         </ListItem>
 
