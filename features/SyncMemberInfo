@@ -1,0 +1,7 @@
+Feature : 同步 lark base - Member Information
+Description : 
+    - 每 15 分鐘同步一次 lark base - Member Information
+    - 資料庫 table name : MEMEBER_INFO
+    - LARK BASE TOKEN And Table ID in env:  MEMBER_APP_TOKEN / MEMBER_TABLE_ID
+    - LARK BASE Column Name : No / Member / Department / Position / Team / Remark
+    - 只需要同步資料到 database中，不需加 api 與 頁面。

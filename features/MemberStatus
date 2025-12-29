@@ -1,0 +1,11 @@
+Feature : 新增一個 dashboard 顯示 某一個部門的 底下的組員工作狀態
+Description : 
+    - 頁面最上面有一個row 可以選擇要檢視那一個部門 ( from Department) 
+    - 根舉所選擇的部門來顯示組員列表
+    - 組員列表的欄位 : 部門名稱 / 組員名稱 / 目前工作的TP / In Progress的單子 / Project所屬的部門   
+      -- [目前工作 tp] 的判斷邏輯
+      --- 查詢 lark tcg table 中 assignee 為 這個組員 且狀態為的 in-progress 的單子
+      --- 查詢 lark tcg table 中 resolved_by 為 這個組員 且 updated_at 大於昨天 0點0分 的單子
+      --- 這個單子的所屬的 tp  或是 這個單子的 parent_tickets 的單子所屬的tp
+      --  Project所屬的部門   
+      --- 所屬 tp 的 部門欄位。 查詢 lar_tp的表。

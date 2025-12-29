@@ -1,0 +1,9 @@
+Feature : 新增一個 dashboard 顯示 某一個部門的 專案狀態
+Description : 
+    - 新增一個 Menu : Project Planning
+    - TP 就是指 Project
+    - 頁面最上面有一個row 可以選擇要檢視那一個部門 ( from Department) 與 可選擇要看那一個 project type ( ALL / Tech / Integration / ICR / Project)
+    以及 用kanban 檢視 或是甘特圖
+    - 若檢視方式為 kanban，則根據 tp 的狀態顯示每一個column。排序為 Open > In Review > Action Needed -> In Progress > Resolved > Closed
+    - 若檢視方式為 甘特圖，則只顯示 In Progress 的 projects
+    -

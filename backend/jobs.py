@@ -68,10 +68,15 @@ def map_fields_to_model(model_instance, lark_fields):
     
     mapped_count = 0
     for key, value in lark_fields.items():
-        # 1. Normalize key
-        col_name = normalize_lark_key(key)
+        # 0. Check for explicit mapping in model
+        col_name = None
+        if hasattr(model_instance, 'lark_mapping') and key in model_instance.lark_mapping:
+            col_name = model_instance.lark_mapping[key]
+        else:
+            # 1. Normalize key
+            col_name = normalize_lark_key(key)
         
-        # 2. Check if specific column exists (e.g., ticket_number)
+        # 2. Check if valid column
         if col_name in valid_columns:
             # Extract/Convert value
             final_val = extract_lark_value(value)

@@ -86,7 +86,30 @@ class LarkModelDept(Base):
     # Specific Fields
     dept_id = Column(Text)
     department = Column(Text)
-    tp_component = Column(Text)
-    tcg_component = Column(Text)
-    icr_component = Column(Text)
+    tp_component = Column(String)
+    tcg_component = Column(String)
+    icr_component = Column(String)
 
+
+class LarkModelMember(Base):
+    __tablename__ = 'MEMBER_INFO'
+    
+    record_id = Column(String, primary_key=True)
+    updated_at = Column(BigInteger)
+    
+    member_no = Column(String)
+    name = Column(String)
+    department = Column(String)
+    position = Column(String)
+    team = Column(String)
+    remark = Column(String)
+
+    # Lark Field Mapping
+    lark_mapping = {
+        "No": "member_no",
+        "Member": "name", 
+        "Department": "department",
+        "Position": "position",
+        "Team": "team",
+        "Remark": "remark"
+    }
