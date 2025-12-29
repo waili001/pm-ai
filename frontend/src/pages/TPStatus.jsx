@@ -26,7 +26,7 @@ import {
 import { parseJiraMarkup } from '../utils/jiraMarkup';
 import { JiraMarkupRenderer } from '../utils/JiraMarkupRenderer';
 
-const STATUS_ORDER = ["Open", "To Do", "In Progress", "In Review", "Resolved", "Closed"];
+const STATUS_ORDER = ["Open", "To Do", "In Progress", "In Review", "Resolved", "Scheduled", "Closed"];
 
 const STORAGE_KEY = 'tp_kanban_last_selected';
 const HISTORY_STORAGE_KEY = 'tp_kanban_recent_history';

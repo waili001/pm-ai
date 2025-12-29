@@ -70,7 +70,8 @@ class LarkModelTCG(Base):
     story_points = Column(Integer)
 
 
-# Deprecated but kept for migration/ref if needed, or can be removed if fresh start
-# class LarkRecord(Base):
-#     __tablename__ = "lark_records"
-# ...
+class TCGRemovedTickets(Base):
+    __tablename__ = "TCG_REMOVED_TICKETS"
+
+    ticket_number = Column(String, primary_key=True, index=True)
+    deleted_at = Column(BigInteger)  # Timestamp of deletion

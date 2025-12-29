@@ -4,7 +4,7 @@ from lark_service import list_records
 from apscheduler.schedulers.background import BackgroundScheduler
 from contextlib import asynccontextmanager
 from database import engine, Base, SessionLocal
-from jobs import sync_lark_table
+from jobs import sync_lark_table, sync_jira_verification
 from models import LarkModelTP, LarkModelTCG
 import logging
 
@@ -17,6 +17,8 @@ logging.basicConfig(
         logging.FileHandler('backend.log')
     ]
 )
+# Suppress Lark SDK debug logs
+logging.getLogger("Lark").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # Initialize DB
@@ -81,6 +83,15 @@ def trigger_sync():
     try:
         run_sync_jobs(force_full=True)
         return {"status": "success", "message": "Sync jobs triggered successfully (Force Full)."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@app.post("/api/jobs/verify-jira")
+def trigger_jira_verification():
+    """Manually trigger Jira verification to clean up deleted tickets."""
+    try:
+        sync_jira_verification()
+        return {"status": "success", "message": "Jira verification job completed."}
     except Exception as e:
         return {"status": "error", "message": str(e)}
 

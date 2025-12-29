@@ -4,7 +4,7 @@ import json
 import logging
 from sqlalchemy.orm import Session
 from database import SessionLocal
-from models import LarkModelTP, LarkModelTCG
+from models import LarkModelTP, LarkModelTCG, TCGRemovedTickets
 from lark_service import list_records
 
 # Configure logger
@@ -108,21 +108,41 @@ def sync_lark_table(app_token: str, table_id: str, model_class, force_full: bool
         if not force_full:
                 latest_timestamp = get_latest_update_time(db, model_class)
         
-        # Disable filter - causing API errors with Lark
-        filter_str = None
-        # if latest_timestamp:
-        #     one_day_ago_ms = int((datetime.now() - timedelta(days=1)).timestamp() * 1000)
-        #     filter_str = f'CurrentValue.[Updated Date] > {one_day_ago_ms}'
-        #     print(f"Incremental sync: {filter_str}")
-        # else:
-        logger.info("Full sync: Fetching all records with pagination.")
+        # Prepare filter for incremental sync
+        filter_obj = None
+        if latest_timestamp and not force_full:
+             # Sync records updated since yesterday (buffer for safety)
+             one_day_ago_ms = int((datetime.now() - timedelta(days=1)).timestamp() * 1000)
+             # Construct JSON filter object for Lark Search API
+             filter_obj = {
+                 "conjunction": "and",
+                 "conditions": [
+                     {
+                         "field_name": "Updated Date",
+                         "operator": "isGreater",
+                         "value": [one_day_ago_ms]
+                     }
+                 ]
+             }
+             logger.info(f"Incremental sync enabled. Filter: Updated Date > {datetime.fromtimestamp(one_day_ago_ms/1000)}")
+        else:
+             logger.info("Full sync: Fetching all records.")
+
+        # Pre-load removed tickets if syncing TCG table
+        removed_tickets_set = set()
+        if model_class == LarkModelTCG:
+            removed = db.query(TCGRemovedTickets.ticket_number).all()
+            removed_tickets_set = {r[0] for r in removed}
+            if removed_tickets_set:
+                logger.info(f"Loaded {len(removed_tickets_set)} removed tickets to ignore.")
 
         has_more = True
         page_token = None
         total_fetched = 0
         
         while has_more:
-             resp = list_records(app_token, table_id, filter_str, page_token)
+             # Pass filter_obj (dict) or None
+             resp = list_records(app_token, table_id, filter_obj, page_token)
              
              if not resp or "items" not in resp:
                  logger.warning(f"No items found or error: {resp}")
@@ -135,6 +155,27 @@ def sync_lark_table(app_token: str, table_id: str, model_class, force_full: bool
              for item in records:
                  record_id = item["record_id"]
                  fields = item["fields"]
+                 
+                 # Check if ticket matches a removed ticket (TCG specific)
+                 if model_class == LarkModelTCG:
+                     # Attempt to find ticket number from fields
+                     # Field name usually 'TCG Tickets' or 'TCG Ticket'
+                     # Helper to extract value regardless of exact case/naming if possible, 
+                     # but here we need to match what map_fields_to_model does or check raw field.
+                     # From models.py: tcg_tickets. Lark field likely "TCG Tickets"
+                     raw_ticket_val = fields.get("TCG Tickets") or fields.get("TCG Ticket")
+                     if raw_ticket_val:
+                         # normalize/extract string value similar to extract_lark_value logic?
+                         # Or just check simple string. extract_lark_value handles lists.
+                         # Let's use extract_lark_value to be safe on the format
+                         ticket_num_str = extract_lark_value(raw_ticket_val)
+                         # If it's a list string "TCG-123, TCG-456", might be tricky. usually 1 ticket.
+                         # Split and check?
+                         # Assuming simple case for now.
+                         if ticket_num_str in removed_tickets_set:
+                             logger.debug(f"Skipping removed ticket: {ticket_num_str}")
+                             continue
+
                  updated_at_val = fields.get("Updated Date", 0) 
                  
                  existing = db.query(model_class).filter(model_class.record_id == record_id).first()
@@ -176,7 +217,69 @@ def sync_lark_table(app_token: str, table_id: str, model_class, force_full: bool
 
     except Exception as e:
         logger.error(f"Error executing sync_lark_table: {e}", exc_info=True)
-        import traceback
-        traceback.print_exc()
+    finally:
+        db.close()
+
+def sync_jira_verification():
+    """
+    Verifies active TCG tickets (not Closed) against Jira.
+    If a ticket returns 404 Not Found from Jira, it is deleted from the local DB.
+    """
+    logger.info("Starting Jira Verification Job...")
+    from jira_service import JiraService
+    
+    jira_service = JiraService()
+    if not jira_service.jira:
+        logger.warning("Jira Service not configured. Skipping verification.")
+        return
+
+    db = SessionLocal()
+    try:
+        # 1. Fetch active tickets (jira_status != 'Closed')
+        # Note: adjust filter if 'Closed' case sensitivity varies (e.g. 'closed', 'Done')
+        active_tickets = db.query(LarkModelTCG).filter(LarkModelTCG.jira_status != 'Closed').all()
+        logger.info(f"Found {len(active_tickets)} active tickets to verify.")
+        
+        deleted_count = 0
+        verified_count = 0
+        
+        for ticket in active_tickets:
+            ticket_number = ticket.tcg_tickets
+            if not ticket_number:
+                continue
+
+            # Verify with Jira
+            issue = jira_service.get_ticket(ticket_number)
+            
+            if issue is None:
+                # 404 Not Found -> Delete
+                logger.warning(f"Ticket {ticket_number} not found in Jira. Deleting from DB and adding to Removed list.")
+                
+                # Add to Removed Tickets table
+                try:
+                    removed_ticket = TCGRemovedTickets(
+                        ticket_number=ticket_number,
+                        deleted_at=int(time.time() * 1000)
+                    )
+                    db.add(removed_ticket)
+                    # Commit strictly after adding to ensure it's saved even if verification crashes later? 
+                    # Actually we commit at the end.
+                except Exception as e:
+                    logger.error(f"Failed to add {ticket_number} to removed list: {e}")
+
+                db.delete(ticket)
+                deleted_count += 1
+            else:
+                verified_count += 1
+            
+            # Rate limiting / Sleep to be nice
+            if verified_count % 10 == 0:
+                time.sleep(0.5)
+
+        db.commit()
+        logger.info(f"Jira Verification Complete. Verified: {verified_count}, Deleted: {deleted_count}")
+
+    except Exception as e:
+        logger.error(f"Error in sync_jira_verification: {e}", exc_info=True)
     finally:
         db.close()

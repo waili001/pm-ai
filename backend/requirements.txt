@@ -4,3 +4,4 @@ lark-oapi
 python-dotenv
 sqlalchemy
 APScheduler
+jira
