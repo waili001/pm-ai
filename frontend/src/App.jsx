@@ -6,7 +6,7 @@ import Layout from './components/Layout'
 import SqliteAdmin from './pages/SqliteAdmin'
 
 import JobConfig from './pages/JobConfig'
-import TPStatus from './pages/TPStatus'
+import ProjectBacklog from './pages/ProjectBacklog'
 
 function Home() {
   const [data, setData] = useState(null)
@@ -57,7 +57,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="admin/sqlite" element={<SqliteAdmin />} />
           <Route path="admin/jobs" element={<JobConfig />} />
-          <Route path="tp-status" element={<TPStatus />} />
+          <Route path="project-backlog" element={<ProjectBacklog />} />
         </Route>
       </Routes>
     </BrowserRouter>

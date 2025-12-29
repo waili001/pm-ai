@@ -1,11 +1,12 @@
 from fastapi import FastAPI
+from fastapi import BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from lark_service import list_records
 from apscheduler.schedulers.background import BackgroundScheduler
 from contextlib import asynccontextmanager
 from database import engine, Base, SessionLocal
 from jobs import sync_lark_table, sync_jira_verification
-from models import LarkModelTP, LarkModelTCG
+from models import LarkModelTP, LarkModelTCG, LarkModelDept
 import logging
 
 # Configure logging
@@ -36,6 +37,10 @@ TP_TABLE_ID = os.getenv("TP_TABLE_ID")
 # TCG Table Info
 TCG_APP_TOKEN = os.getenv("TCG_APP_TOKEN")
 TCG_TABLE_ID = os.getenv("TCG_TABLE_ID")
+
+# TCG Dept Info
+DPT_APP_TOKEN = os.getenv("DPT_APP_TOKEN")
+DPT_TABLE_ID = os.getenv("DPT_TABLE_ID")
 
 def run_sync_jobs(force_full: bool = False):
     logger.info(f"Running sync jobs... (Force Full: {force_full})")
@@ -97,10 +102,25 @@ def trigger_jira_verification():
 
 @app.get("/")
 def read_root():
-    return {"message": "Hello from FastAPI Backend!"}
+    return {"message": "Jira verification job started in background"}
 
 @app.get("/api/data")
 def get_data():
+    return {"data": "This is data from the backend"}
+
+
+@app.post("/api/sync/lark/dept")
+async def sync_lark_dept(background_tasks: BackgroundTasks, force_full: bool = False):
+    if not DPT_APP_TOKEN or not DPT_TABLE_ID:
+        return {"message": "DPT_APP_TOKEN or DPT_TABLE_ID not configured", "status": "error"}
+    
+    background_tasks.add_task(sync_lark_table, DPT_APP_TOKEN, DPT_TABLE_ID, LarkModelDept, force_full)
+    return {"message": "Department sync job started in background"}
+
+
+# Run Scheduler
+@app.on_event("startup")
+async def start_scheduler():
     return {"data": "This is data from the backend"}
 
 @app.get("/api/lark/{app_token}/{table_id}")
@@ -156,7 +176,7 @@ def execute_sql_query(query: SqlQuery):
 
 # --- TP Status Feature APIs ---
 
-@app.get("/api/tp/active")
+@app.get("/api/project/active")
 def get_active_tps():
     """Fetch all active TP projects (Status != Closed/Resolved)."""
     db = SessionLocal()
@@ -189,7 +209,7 @@ def get_active_tps():
     finally:
         db.close()
 
-@app.get("/api/tp/{tp_number}/tcg_tickets")
+@app.get("/api/project/{tp_number}/tcg_tickets")
 def get_tcg_tickets_by_tp(tp_number: str):
     """Fetch TCG tickets associated with a specific TP number."""
     db = SessionLocal()

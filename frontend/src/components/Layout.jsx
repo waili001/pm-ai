@@ -75,13 +75,13 @@ export default function Layout() {
 
                         <ListItem disablePadding>
                             <ListItemButton
-                                selected={location.pathname === '/tp-status'}
-                                onClick={() => navigate('/tp-status')}
+                                selected={location.pathname === '/project-backlog'}
+                                onClick={() => navigate('/project-backlog')}
                             >
                                 <ListItemIcon>
                                     <Assignment />
                                 </ListItemIcon>
-                                <ListItemText primary="TP Kanban" />
+                                <ListItemText primary="Project Backlog" />
                             </ListItemButton>
                         </ListItem>
 

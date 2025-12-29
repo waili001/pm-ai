@@ -28,11 +28,11 @@ import { JiraMarkupRenderer } from '../utils/JiraMarkupRenderer';
 
 const STATUS_ORDER = ["Open", "To Do", "In Progress", "In Review", "Resolved", "Scheduled", "Closed"];
 
-const STORAGE_KEY = 'tp_kanban_last_selected';
-const HISTORY_STORAGE_KEY = 'tp_kanban_recent_history';
+const STORAGE_KEY = 'project_backlog_last_selected';
+const HISTORY_STORAGE_KEY = 'project_backlog_recent_history';
 const MAX_HISTORY = 10;
 
-export default function TPStatus() {
+export default function ProjectBacklog() {
     const [activeTPs, setActiveTPs] = useState([]);
     const [selectedTP, setSelectedTP] = useState(null);
     const [tickets, setTickets] = useState([]);
@@ -75,7 +75,7 @@ export default function TPStatus() {
     // Fetch Active TPs on Mount
     useEffect(() => {
         setLoadingTPs(true);
-        fetch('http://127.0.0.1:8000/api/tp/active')
+        fetch('http://127.0.0.1:8000/api/project/active')
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
@@ -107,7 +107,7 @@ export default function TPStatus() {
             addToHistory(selectedTP);
 
             setLoadingTickets(true);
-            fetch(`http://127.0.0.1:8000/api/tp/${selectedTP.ticket_number}/tcg_tickets`)
+            fetch(`http://127.0.0.1:8000/api/project/${selectedTP.ticket_number}/tcg_tickets`)
                 .then(res => res.json())
                 .then(data => {
                     if (Array.isArray(data)) {
@@ -193,7 +193,7 @@ export default function TPStatus() {
         <Box sx={{ width: '100%', px: 3, py: 0 }}>
             <Box sx={{ my: 4 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
-                    TP Kanban
+                    Project Backlog
                 </Typography>
 
                 {/* TP Selector & Filter */}
@@ -332,7 +332,10 @@ export default function TPStatus() {
                         {selectedTicket?.issue_type} - {selectedTicket?.status}
                     </Typography>
                 </DialogTitle>
-                <DialogContent dividers>
+                <DialogContent dividers sx={{
+                    scrollbarWidth: 'none',
+                    '&::-webkit-scrollbar': { display: 'none' }
+                }}>
                     <Typography variant="h6" gutterBottom>
                         {selectedTicket?.title}
                     </Typography>
@@ -361,7 +364,12 @@ export default function TPStatus() {
                         <Typography variant="subtitle2" gutterBottom>
                             Sub Tasks
                         </Typography>
-                        <Box sx={{ maxHeight: 200, overflowY: 'auto' }}>
+                        <Box sx={{
+                            maxHeight: 200,
+                            overflowY: 'auto',
+                            scrollbarWidth: 'none',
+                            '&::-webkit-scrollbar': { display: 'none' }
+                        }}>
                             <List dense>
                                 {selectedTicket.childTasks.map(child => (
                                     <ListItem key={child.ticket_number} disablePadding sx={{ py: 0.5 }}>

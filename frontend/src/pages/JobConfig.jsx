@@ -11,63 +11,73 @@ import {
 import { Sync as SyncIcon } from '@mui/icons-material';
 
 export default function JobConfig() {
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState(null);
-    const [severity, setSeverity] = useState('info');
-
-    const [loadingJira, setLoadingJira] = useState(false);
-    const [messageJira, setMessageJira] = useState(null);
-    const [severityJira, setSeverityJira] = useState('info');
+    const [loadingSync, setLoadingSync] = useState(false);
+    const [loadingVerify, setLoadingVerify] = useState(false);
+    const [loadingDept, setLoadingDept] = useState(false);
+    const [message, setMessage] = useState(null); // { type: 'success' | 'error', text: string }
 
     const handleVerifyJira = async () => {
-        setLoadingJira(true);
-        setMessageJira(null);
+        setLoadingVerify(true);
+        setMessage(null);
         try {
-            const response = await fetch('http://localhost:8000/api/jobs/verify-jira', {
+            const res = await fetch('http://127.0.0.1:8000/api/jobs/verify-jira', {
                 method: 'POST',
             });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setMessageJira(data.message || 'Jira verification completed');
-                setSeverityJira('success');
+            const data = await res.json();
+            if (res.ok) {
+                setMessage({ type: 'success', text: `Jira Verify Started: ${data.message}` });
             } else {
-                setMessageJira(data.message || 'Error triggering verification');
-                setSeverityJira('error');
+                setMessage({ type: 'error', text: `Error: ${data.message}` });
             }
-        } catch (error) {
-            console.error('Error:', error);
-            setMessageJira('Network error or server unavailable');
-            setSeverityJira('error');
+        } catch (err) {
+            console.error('Error:', err);
+            setMessage({ type: 'error', text: `Request failed: ${err.message}` });
         } finally {
-            setLoadingJira(false);
+            setLoadingVerify(false);
+        }
+    };
+
+    const handleSyncDept = async () => {
+        setLoadingDept(true);
+        setMessage(null);
+        try {
+            const res = await fetch('http://127.0.0.1:8000/api/sync/lark/dept', {
+                method: 'POST',
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setMessage({ type: 'success', text: `Dept Sync Started: ${data.message}` });
+            } else {
+                setMessage({ type: 'error', text: `Error: ${data.message}` });
+            }
+        } catch (err) {
+            console.error('Error:', err);
+            setMessage({ type: 'error', text: `Request failed: ${err.message}` });
+        } finally {
+            setLoadingDept(false);
         }
     };
 
     const handleForceSync = async () => {
-        setLoading(true);
+        setLoadingSync(true);
         setMessage(null);
         try {
-            const response = await fetch('http://localhost:8000/api/jobs/sync', {
+            const response = await fetch('http://127.0.0.1:8000/api/jobs/sync', {
                 method: 'POST',
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                setMessage(data.message || 'Sync triggered successfully');
-                setSeverity('success');
+                setMessage({ type: 'success', text: data.message || 'Sync triggered successfully' });
             } else {
-                setMessage(data.message || 'Error triggering sync');
-                setSeverity('error');
+                setMessage({ type: 'error', text: data.message || 'Error triggering sync' });
             }
         } catch (error) {
             console.error('Error:', error);
-            setMessage('Network error or server unavailable');
-            setSeverity('error');
+            setMessage({ type: 'error', text: 'Network error or server unavailable' });
         } finally {
-            setLoading(false);
+            setLoadingSync(false);
         }
     };
 
@@ -92,19 +102,24 @@ export default function JobConfig() {
                     <Box>
                         <Button
                             variant="contained"
-                            color="warning"
+                            color="primary"
                             size="large"
-                            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SyncIcon />}
+                            startIcon={loadingSync ? <CircularProgress size={20} color="inherit" /> : <SyncIcon />}
                             onClick={handleForceSync}
-                            disabled={loading}
+                            disabled={loadingSync || loadingVerify || loadingDept}
                         >
-                            {loading ? 'Syncing...' : 'Force Sync All Tables'}
+                            {loadingSync ? 'Syncing...' : 'Force Sync All Tables'}
                         </Button>
                     </Box>
 
-                    {message && (
-                        <Alert severity={severity} sx={{ mt: 2 }}>
-                            {message}
+                    {message && message.type === 'success' && (
+                        <Alert severity="success" sx={{ mt: 2 }}>
+                            {message.text}
+                        </Alert>
+                    )}
+                    {message && message.type === 'error' && (
+                        <Alert severity="error" sx={{ mt: 2 }}>
+                            {message.text}
                         </Alert>
                     )}
                 </Stack>
@@ -113,30 +128,47 @@ export default function JobConfig() {
             <Paper sx={{ p: 4, mt: 3 }}>
                 <Stack spacing={3}>
                     <Typography variant="h6">
-                        Jira Verification
+                        Jira Verification & Department Sync
                     </Typography>
 
                     <Typography variant="body1" color="text.secondary">
                         Verify local TCG tickets against Jira. Active tickets that are not found in Jira (404)
                         will be deleted from the local database.
+                        Also, manually sync department data from Lark.
                     </Typography>
 
-                    <Box>
+                    <Stack direction="row" spacing={2}>
                         <Button
-                            variant="contained"
+                            variant="outlined"
                             color="secondary"
                             size="large"
-                            startIcon={loadingJira ? <CircularProgress size={20} color="inherit" /> : <SyncIcon />}
+                            startIcon={loadingVerify ? <CircularProgress size={20} color="inherit" /> : <SyncIcon />}
                             onClick={handleVerifyJira}
-                            disabled={loadingJira}
+                            disabled={loadingVerify || loadingSync || loadingDept}
                         >
-                            {loadingJira ? 'Verifying...' : 'Verify Jira Tickets'}
+                            {loadingVerify ? 'Verifying...' : 'Verify Jira Tickets'}
                         </Button>
-                    </Box>
 
-                    {messageJira && (
-                        <Alert severity={severityJira} sx={{ mt: 2 }}>
-                            {messageJira}
+                        <Button
+                            variant="outlined"
+                            color="warning"
+                            size="large"
+                            startIcon={loadingDept ? <CircularProgress size={20} color="inherit" /> : <SyncIcon />}
+                            onClick={handleSyncDept}
+                            disabled={loadingDept || loadingSync || loadingVerify}
+                        >
+                            {loadingDept ? 'Syncing...' : 'Sync Departments'}
+                        </Button>
+                    </Stack>
+
+                    {message && message.type === 'success' && (
+                        <Alert severity="success" sx={{ mt: 2 }}>
+                            {message.text}
+                        </Alert>
+                    )}
+                    {message && message.type === 'error' && (
+                        <Alert severity="error" sx={{ mt: 2 }}>
+                            {message.text}
                         </Alert>
                     )}
                 </Stack>

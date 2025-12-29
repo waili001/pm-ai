@@ -75,3 +75,18 @@ class TCGRemovedTickets(Base):
 
     ticket_number = Column(String, primary_key=True, index=True)
     deleted_at = Column(BigInteger)  # Timestamp of deletion
+
+
+class LarkModelDept(Base):
+    __tablename__ = "TCG_DEPT"
+
+    record_id = Column(String, primary_key=True, index=True)
+    updated_at = Column(BigInteger)
+    
+    # Specific Fields
+    dept_id = Column(Text)
+    department = Column(Text)
+    tp_component = Column(Text)
+    tcg_component = Column(Text)
+    icr_component = Column(Text)
+
