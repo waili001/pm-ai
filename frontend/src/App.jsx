@@ -26,7 +26,7 @@ function Home() {
   }, [])
 
   return (
-    <Container maxWidth={false}>
+    <Box sx={{ width: '100%', px: 3, py: 0 }} bgcolor="white">
       <Box sx={{ my: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Dashboard
@@ -45,7 +45,7 @@ function Home() {
         </Paper>
 
       </Box>
-    </Container>
+    </Box>
   )
 }
 

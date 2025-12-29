@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Link } from '@mui/material';
 import { parseJiraMarkup } from './jiraMarkup';
 
 /**
@@ -12,13 +12,20 @@ export function JiraMarkupRenderer({ text }) {
     return (
         <Box>
             {elements.map((el, idx) => {
-                // Render text parts (handle bold)
+                // Render text parts (handle bold and links)
                 const renderText = (content) => {
                     if (typeof content === 'string') return content;
                     if (Array.isArray(content)) {
                         return content.map((part, i) => {
                             if (typeof part === 'string') return <span key={i}>{part}</span>;
                             if (part.bold) return <strong key={i}>{part.text}</strong>;
+                            if (part.link) {
+                                return (
+                                    <Link key={i} href={part.href} target="_blank" rel="noopener noreferrer" underline="hover">
+                                        {part.text}
+                                    </Link>
+                                );
+                            }
                             return part;
                         });
                     }

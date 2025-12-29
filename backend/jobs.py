@@ -1,10 +1,14 @@
 from datetime import datetime, timedelta
 import time
 import json
+import logging
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import LarkModelTP, LarkModelTCG
 from lark_service import list_records
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 def get_latest_update_time(db: Session, model_class):
     # Each model is now dedicated to a single table, so no need to filter by table_id
@@ -85,18 +89,18 @@ def map_fields_to_model(model_instance, lark_fields):
     if hasattr(model_instance, '_debug_logged'):
         return
     model_instance._debug_logged = True
-    print(f"  [DEBUG] Mapped {mapped_count}/{len(lark_fields)} fields")
-    print(f"  [DEBUG] Valid columns: {sorted(valid_columns)}")
-    print(f"  [DEBUG] Sample mappings:")
+    logger.debug(f"Mapped {mapped_count}/{len(lark_fields)} fields")
+    logger.debug(f"Valid columns: {sorted(valid_columns)}")
+    logger.debug("Sample mappings:")
     for key in list(lark_fields.keys())[:5]:
         col_name = normalize_lark_key(key)
         in_model = col_name in valid_columns
-        print(f"    '{key}' -> '{col_name}' [{('✓' if in_model else '✗')}]")
+        logger.debug(f"  '{key}' -> '{col_name}' [{'✓' if in_model else '✗'}]")
 
 
 def sync_lark_table(app_token: str, table_id: str, model_class, force_full: bool = False):
     table_name = model_class.__tablename__
-    print(f"Starting sync for table: {table_name} ({table_id}) [Force Full: {force_full}]")
+    logger.info(f"Starting sync for table: {table_name} ({table_id}) [Force Full: {force_full}]")
     
     db = SessionLocal()
     try:
@@ -111,7 +115,7 @@ def sync_lark_table(app_token: str, table_id: str, model_class, force_full: bool
         #     filter_str = f'CurrentValue.[Updated Date] > {one_day_ago_ms}'
         #     print(f"Incremental sync: {filter_str}")
         # else:
-        print("Full sync: Fetching all records with pagination.")
+        logger.info("Full sync: Fetching all records with pagination.")
 
         has_more = True
         page_token = None
@@ -121,12 +125,12 @@ def sync_lark_table(app_token: str, table_id: str, model_class, force_full: bool
              resp = list_records(app_token, table_id, filter_str, page_token)
              
              if not resp or "items" not in resp:
-                 print(f"No items found or error: {resp}")
+                 logger.warning(f"No items found or error: {resp}")
                  break
                  
              records = resp.get("items", [])
              total_fetched += len(records)
-             print(f"Fetched {len(records)} records (Total: {total_fetched}).")
+             logger.info(f"Fetched {len(records)} records (Total: {total_fetched})")
              
              for item in records:
                  record_id = item["record_id"]
@@ -163,15 +167,15 @@ def sync_lark_table(app_token: str, table_id: str, model_class, force_full: bool
              if has_more:
                  page_token = resp.get("page_token")
                  if not page_token:
-                     print("Warning: has_more=True but no page_token. Stopping.")
+                     logger.warning("has_more=True but no page_token. Stopping pagination.")
                      break
-                 print(f"Fetching next page...")
+                 logger.info("Fetching next page...")
              else:
-                 print(f"✓ Sync complete. Total: {total_fetched} records.")
+                 logger.info(f"✓ Sync complete. Total: {total_fetched} records")
                  break 
 
     except Exception as e:
-        print(f"Error executing sync_lark_table: {e}")
+        logger.error(f"Error executing sync_lark_table: {e}", exc_info=True)
         import traceback
         traceback.print_exc()
     finally:

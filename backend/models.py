@@ -52,6 +52,7 @@ class LarkModelTCG(Base):
     tcg_tickets = Column(Text)
     tp_number = Column(Text)
     title = Column(Text)
+    parent_tickets = Column(Text)  # Parent tickets reference from Lark "Parent Tickets" field
     lark_updated_date = Column(String) # Mapped from 'Updated Date'
 
     # Legacy / Unused fields (Kept temporarily or if needed for other logic)

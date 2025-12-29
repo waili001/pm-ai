@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
     Box,
-    Container,
     Typography,
     Autocomplete,
     TextField,
@@ -16,8 +15,7 @@ import {
     DialogContent,
     DialogActions,
     Button,
-    Switch,
-    FormControlLabel,
+
     Divider,
     Link,
     List,
@@ -42,8 +40,6 @@ export default function TPStatus() {
     const [loadingTickets, setLoadingTickets] = useState(false);
     const [recentHistory, setRecentHistory] = useState([]);
 
-    // Filter State
-    const [hideDev, setHideDev] = useState(false);
 
     // Dialog State
     const [openDialog, setOpenDialog] = useState(false);
@@ -115,7 +111,45 @@ export default function TPStatus() {
                 .then(res => res.json())
                 .then(data => {
                     if (Array.isArray(data)) {
-                        setTickets(data);
+                        // 1. Map all tickets by Ticket Number for easy lookup
+                        const ticketMap = {};
+                        data.forEach(t => {
+                            ticketMap[t.ticket_number] = { ...t, childTasks: [] };
+                        });
+
+                        // 2. Identify Children and Parents
+                        const mainTickets = [];
+                        const orphanChildren = []; // Should ideally be none if data is consistent
+
+                        data.forEach(rawTicket => {
+                            const ticket = ticketMap[rawTicket.ticket_number];
+
+                            if (ticket.parent_tickets) {
+                                // This is a child ticket
+                                // handle comma separated parents if necessary, though usually one parent for hierarchy
+                                const parents = ticket.parent_tickets.split(',').map(s => s.trim()).filter(s => s);
+
+                                let foundParent = false;
+                                parents.forEach(parentId => {
+                                    if (ticketMap[parentId]) {
+                                        ticketMap[parentId].childTasks.push(ticket);
+                                        foundParent = true;
+                                    }
+                                });
+
+                                if (!foundParent) {
+                                    // Parent not in this TP context, decide whether to show or hide.
+                                    // User requirement: "hide parent tickets 不為空的 tcg 單"
+                                    // So we hide it even if parent is missing from board.
+                                    console.warn(`Ticket ${ticket.ticket_number} has parent ${ticket.parent_tickets} but parent not found in current view.`);
+                                }
+                            } else {
+                                // No parent, so it stays on main board
+                                mainTickets.push(ticket);
+                            }
+                        });
+
+                        setTickets(mainTickets);
                     }
                     setLoadingTickets(false);
                 })
@@ -130,12 +164,6 @@ export default function TPStatus() {
 
     // Group Tickets by Status
     const groupedTickets = tickets.reduce((acc, ticket) => {
-        // Filter: Hide DEV Task if enabled
-        // Note: issue_type might need normalization if case varies
-        if (hideDev && ticket.issue_type === 'DEV Task') {
-            return acc;
-        }
-
         const status = ticket.status || 'Unknown';
         if (!acc[status]) {
             acc[status] = [];
@@ -162,7 +190,7 @@ export default function TPStatus() {
     };
 
     return (
-        <Container maxWidth={false}>
+        <Box sx={{ width: '100%', px: 3, py: 0 }}>
             <Box sx={{ my: 4 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
                     TP Kanban
@@ -188,17 +216,6 @@ export default function TPStatus() {
                                         helperText="Search by TP Number or Title"
                                     />
                                 )}
-                            />
-                        </Box>
-                        <Box sx={{ flexShrink: 0 }}>
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={hideDev}
-                                        onChange={(e) => setHideDev(e.target.checked)}
-                                    />
-                                }
-                                label="Hide DEV Tasks"
                             />
                         </Box>
                     </Box>
@@ -252,18 +269,26 @@ export default function TPStatus() {
                                                     <Card key={index} sx={{ mb: 1 }}>
                                                         <CardActionArea onClick={() => handleCardClick(ticket)}>
                                                             <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                                                                <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 'bold', zIndex: 10, position: 'relative' }}>
-                                                                    <Link
-                                                                        href={`https://jira.tc-gaming.co/jira/browse/${ticket.ticket_number}`}
-                                                                        target="_blank"
-                                                                        rel="noopener noreferrer"
-                                                                        onClick={(e) => e.stopPropagation()}
-                                                                        underline="hover"
-                                                                        color="inherit"
-                                                                    >
-                                                                        {ticket.ticket_number}
-                                                                    </Link>
-                                                                </Typography>
+                                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
+                                                                    <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 'bold', zIndex: 10, position: 'relative' }}>
+                                                                        <Link
+                                                                            href={`https://jira.tc-gaming.co/jira/browse/${ticket.ticket_number}`}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                            underline="hover"
+                                                                            color="inherit"
+                                                                        >
+                                                                            {ticket.ticket_number}
+                                                                        </Link>
+                                                                    </Typography>
+                                                                    <Chip
+                                                                        label={ticket.issue_type || "Task"}
+                                                                        size="small"
+                                                                        color="secondary"
+                                                                        sx={{ fontSize: '0.65rem', height: 18 }}
+                                                                    />
+                                                                </Box>
                                                                 <Typography variant="body2" sx={{ mb: 1, lineHeight: 1.3 }}>
                                                                     {ticket.title}
                                                                 </Typography>
@@ -275,12 +300,14 @@ export default function TPStatus() {
                                                                         variant="outlined"
                                                                         sx={{ fontSize: '0.7rem', height: 20 }}
                                                                     />
-                                                                    <Chip
-                                                                        label={ticket.issue_type || "Task"}
-                                                                        size="small"
-                                                                        color="secondary"
-                                                                        sx={{ fontSize: '0.7rem', height: 20 }}
-                                                                    />
+                                                                    {ticket.childTasks && ticket.childTasks.length > 0 && (
+                                                                        <Chip
+                                                                            label={`Tasks: ${ticket.childTasks.length}`}
+                                                                            size="small"
+                                                                            color="warning"
+                                                                            sx={{ fontSize: '0.7rem', height: 20 }}
+                                                                        />
+                                                                    )}
                                                                 </Box>
                                                             </CardContent>
                                                         </CardActionArea>
@@ -298,7 +325,7 @@ export default function TPStatus() {
             </Box>
 
             {/* Ticket Detail Dialog */}
-            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
                 <DialogTitle>
                     {selectedTicket?.ticket_number}
                     <Typography variant="subtitle2" color="text.secondary">
@@ -329,11 +356,53 @@ export default function TPStatus() {
                     <JiraMarkupRenderer text={selectedTicket?.description} />
 
                 </DialogContent>
+                {selectedTicket?.childTasks && selectedTicket.childTasks.length > 0 && (
+                    <Box sx={{ p: 2, bgcolor: '#f9f9f9', borderTop: '1px solid #e0e0e0' }}>
+                        <Typography variant="subtitle2" gutterBottom>
+                            Sub Tasks
+                        </Typography>
+                        <Box sx={{ maxHeight: 200, overflowY: 'auto' }}>
+                            <List dense>
+                                {selectedTicket.childTasks.map(child => (
+                                    <ListItem key={child.ticket_number} disablePadding sx={{ py: 0.5 }}>
+                                        <Grid container alignItems="center" spacing={1}>
+                                            <Grid item xs={3}>
+                                                <Link
+                                                    href={`https://jira.tc-gaming.co/jira/browse/${child.ticket_number}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    underline="hover"
+                                                    sx={{ fontSize: '0.85rem' }}
+                                                >
+                                                    {child.ticket_number}
+                                                </Link>
+                                            </Grid>
+                                            <Grid item xs={5}>
+                                                <Typography variant="body2" noWrap title={child.title}>
+                                                    {child.title}
+                                                </Typography>
+                                            </Grid>
+                                            <Grid item xs={2}>
+                                                <Typography variant="caption" display="block">
+                                                    {child.assignee}
+                                                </Typography>
+                                            </Grid>
+                                            <Grid item xs={2}>
+                                                <Chip label={child.status} size="small" variant="outlined" sx={{ height: 16, fontSize: '0.65rem' }} />
+                                            </Grid>
+                                        </Grid>
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </Box>
+                    </Box>
+                )}
+
                 <DialogActions>
                     <Button onClick={handleCloseDialog}>Close</Button>
                 </DialogActions>
             </Dialog>
 
-        </Container>
+        </Box>
     );
 }

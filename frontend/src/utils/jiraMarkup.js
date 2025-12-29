@@ -21,7 +21,7 @@ export function parseJiraMarkup(text) {
         const headingMatch = line.match(/^h([1-6])\.\s*(.+)$/);
         if (headingMatch) {
             const level = parseInt(headingMatch[1]);
-            const content = parseBold(headingMatch[2]);
+            const content = parseInline(headingMatch[2]);
             elements.push({
                 type: `h${level}`,
                 content,
@@ -34,7 +34,7 @@ export function parseJiraMarkup(text) {
         const ulMatch = line.match(/^(\*+)\s+(.+)$/);
         if (ulMatch) {
             const depth = ulMatch[1].length;
-            const content = parseBold(ulMatch[2]);
+            const content = parseInline(ulMatch[2]);
             elements.push({
                 type: 'li',
                 content,
@@ -48,7 +48,7 @@ export function parseJiraMarkup(text) {
         const olMatch = line.match(/^(#+)\s+(.+)$/);
         if (olMatch) {
             const depth = olMatch[1].length;
-            const content = parseBold(olMatch[2]);
+            const content = parseInline(olMatch[2]);
             elements.push({
                 type: 'oli',
                 content,
@@ -58,8 +58,8 @@ export function parseJiraMarkup(text) {
             return;
         }
 
-        // Regular paragraph with bold parsing
-        const content = parseBold(line);
+        // Regular paragraph with bold and link parsing
+        const content = parseInline(line);
         elements.push({
             type: 'p',
             content,
@@ -104,6 +104,47 @@ function parseBold(text) {
 
     if (current) {
         parts.push(inBold ? { bold: true, text: current } : current);
+    }
+
+    return parts.length > 0 ? parts : [text];
+}
+
+/**
+ * Parse text for links first, then bold
+ * Supports [url] and [text|url]
+ */
+function parseInline(text) {
+    // Regex for links: [label|url] or [url]
+    // We strictly look for http/https in the url part
+    const linkRegex = /\[(?:([^|\]]+)\|)?(https?:\/\/[^\]]+)\]/g;
+
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = linkRegex.exec(text)) !== null) {
+        // Add text before the link
+        if (match.index > lastIndex) {
+            const textPart = text.substring(lastIndex, match.index);
+            parts.push(...parseBold(textPart));
+        }
+
+        const label = match[1];
+        const href = match[2];
+        const displayText = label || href;
+
+        parts.push({
+            link: true,
+            text: displayText,
+            href: href
+        });
+
+        lastIndex = linkRegex.lastIndex;
+    }
+
+    // Add remaining text
+    if (lastIndex < text.length) {
+        parts.push(...parseBold(text.substring(lastIndex)));
     }
 
     return parts.length > 0 ? parts : [text];

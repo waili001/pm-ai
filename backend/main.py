@@ -6,6 +6,18 @@ from contextlib import asynccontextmanager
 from database import engine, Base, SessionLocal
 from jobs import sync_lark_table
 from models import LarkModelTP, LarkModelTCG
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+       logging.StreamHandler(),
+        logging.FileHandler('backend.log')
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Initialize DB
 Base.metadata.create_all(bind=engine)
@@ -24,7 +36,7 @@ TCG_APP_TOKEN = os.getenv("TCG_APP_TOKEN")
 TCG_TABLE_ID = os.getenv("TCG_TABLE_ID")
 
 def run_sync_jobs(force_full: bool = False):
-    print(f"Running sync jobs... (Force Full: {force_full})")
+    logger.info(f"Running sync jobs... (Force Full: {force_full})")
     sync_lark_table(TP_APP_TOKEN, TP_TABLE_ID, LarkModelTP, force_full=force_full)
     sync_lark_table(TCG_APP_TOKEN, TCG_TABLE_ID, LarkModelTCG, force_full=force_full)
 
@@ -33,7 +45,7 @@ async def lifespan(app: FastAPI):
     # Start scheduler
     scheduler.add_job(run_sync_jobs, 'interval', minutes=30)
     scheduler.start()
-    print("Scheduler started.")
+    logger.info("Scheduler started")
     
     # Run once on startup for immediate data
     run_sync_jobs() # Run immediately on startup
@@ -42,7 +54,7 @@ async def lifespan(app: FastAPI):
     
     # Shutdown scheduler
     scheduler.shutdown()
-    print("Scheduler shut down.")
+    logger.info("Scheduler shut down")
 
 app = FastAPI(lifespan=lifespan)
 
@@ -187,7 +199,8 @@ def get_tcg_tickets_by_tp(tp_number: str):
                 "reporter": t.reporter,
                 "issue_type": t.issue_type,
                 "status": t.jira_status, # For Kanban grouping
-                "description": t.description  # Description field
+                "description": t.description,  # Description field
+                "parent_tickets": t.parent_tickets  # Parent tickets reference
             })
             
         return results

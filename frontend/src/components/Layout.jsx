@@ -123,7 +123,7 @@ export default function Layout() {
                     </List>
                 </Box>
             </Drawer >
-            <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+            <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: 'background.default', minHeight: '100vh' }}>
                 <Toolbar />
                 <Outlet />
             </Box>
