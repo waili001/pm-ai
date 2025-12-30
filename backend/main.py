@@ -96,11 +96,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Root Endpoint
-@app.get("/")
-def read_root():
-    return {"message": "Jira verification job started in background"}
-
 # Include Routers
 # Include Routers
 # Include Routers

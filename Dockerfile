@@ -30,5 +30,5 @@ COPY --from=frontend-builder /app/frontend/dist ./static
 # Expose Port (Railway controls this, but good for doc)
 EXPOSE 8000
 
-# Run Command
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run Command (Use shell to interpolate PORT env var for Railway)
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
