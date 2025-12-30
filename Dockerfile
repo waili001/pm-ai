@@ -23,7 +23,6 @@ COPY backend/ ./
 
 # Create data directory for SQLite persistence
 RUN mkdir -p /app/data
-VOLUME /app/data
 
 # Copy Built Frontend Assets from Stage 1
 COPY --from=frontend-builder /app/frontend/dist ./static
