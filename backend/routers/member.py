@@ -111,7 +111,8 @@ def get_member_status(department: str):
                 tp_str = f"{tp_data['tp_number']} {tp_data.get('title', '')}"
                 tp_display_list.append({
                     "number": tp_data['tp_number'],
-                    "full": tp_str
+                    "full": tp_str,
+                    "department": tp_data.get('department', '')
                 })
                 if tp_data.get('department'):
                     tp_dept_list.append(tp_data['department'])

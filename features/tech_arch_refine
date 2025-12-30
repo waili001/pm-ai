@@ -1,6 +1,0 @@
-Backend 
-- 將相同性質的檔案放鄉一個folder 
--- debug 放在一起
--- 跟 lark 介接的獨立一個檔案，提供 api 給其它服務使用。 只處理介接的邏輯
--- 每一個 lark base table 轉 database table 的邏輯分別各自一個檔案。
--- lark base table 轉 database table 的邏輯 的檔案放在同一個folder

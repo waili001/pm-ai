@@ -125,7 +125,7 @@ const MemberStatus = () => {
         {
             field: 'current_tps',
             headerName: 'In-Progress TP',
-            width: 300,
+            width: 400,
             renderCell: (params) => (
                 <Box sx={{ py: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                     {Array.isArray(params.value) ? params.value.map((item, index) => (
@@ -137,14 +137,13 @@ const MemberStatus = () => {
                             variant="body2"
                             sx={{ textAlign: 'left' }}
                         >
-                            {item.full}
+                            {item.department ? `[${item.department}] ` : ''}{item.full}
                         </Link>
                     )) : params.value}
                 </Box>
             )
         },
 
-        { field: 'project_dept', headerName: 'Project Dept', width: 150 },
         {
             field: 'in_progress_tickets',
             headerName: 'In Progress Tickets',
@@ -208,7 +207,7 @@ const MemberStatus = () => {
                     </FormControl>
                 </Box>
 
-                <div style={{ height: 600, width: '100%' }}>
+                <Box sx={{ flexGrow: 1, width: '100%', height: '100%' }}>
                     <DataGrid
                         rows={members}
                         columns={columns}
@@ -218,7 +217,7 @@ const MemberStatus = () => {
                         disableSelectionOnClick
                         getRowHeight={() => 'auto'}
                     />
-                </div>
+                </Box>
             </Paper>
 
             {/* Ticket Detail Dialog */}

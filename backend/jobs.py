@@ -114,8 +114,27 @@ def sync_lark_table(app_token: str, table_id: str, model_class, force_full: bool
                 latest_timestamp = get_latest_update_time(db, model_class)
         
         # Prepare filter for incremental sync
-        # Temporary: Force full sync to fix InvalidFilter error until format is resolved
-        logger.info("Full sync: Fetching all records.")
+        filter_obj = None
+        if latest_timestamp and not force_full:
+             # Sync records updated since yesterday (buffer for safety)
+             one_day_ago_ms = int((datetime.now() - timedelta(days=1)).timestamp() * 1000)
+             filter_dt = datetime.fromtimestamp(one_day_ago_ms/1000)
+             date_str = filter_dt.strftime('%Y/%m/%d %H:%M:%S')
+             # Construct JSON filter object for Lark Search API
+             # Requirement: ["ExactDate", timestamp_ms] for DateTime fields with isGreater
+             filter_obj = {
+                 "conjunction": "and",
+                 "conditions": [
+                     {
+                         "field_name": "Updated Date",
+                         "operator": "isGreater",
+                         "value": ["ExactDate", one_day_ago_ms]
+                     }
+                 ]
+             }
+             logger.info(f"Incremental sync enabled. Filter: Updated Date > {date_str} (Timestamp: {one_day_ago_ms})")
+        else:
+             logger.info("Full sync: Fetching all records.")
 
         # Pre-load removed tickets if syncing TCG table
         removed_tickets_set = set()
