@@ -163,6 +163,28 @@ def reorder_projects(request: ReorderRequest):
     finally:
         db.close()
 
+class ReorderTCGRequest(BaseModel):
+    status: str
+    ticket_ids: List[str]
+
+@router.post("/reorder_tcg")
+def reorder_tcg_tickets(request: ReorderTCGRequest):
+    """Reorder TCG tickets within a status column."""
+    db = SessionLocal()
+    try:
+        # Iterate through the list of IDs and update their sort_order
+        for index, ticket_id in enumerate(request.ticket_ids):
+            ticket = db.query(LarkModelTCG).filter(LarkModelTCG.record_id == ticket_id).first()
+            if ticket:
+                ticket.sort_order = index
+        db.commit()
+        return {"status": "success"}
+    except Exception as e:
+        db.rollback()
+        raise e
+    finally:
+        db.close()
+
 @router.get("/{tp_number}/tcg_tickets")
 def get_tcg_tickets_by_tp(tp_number: str):
     """Fetch TCG tickets associated with a specific TP number."""
@@ -173,11 +195,12 @@ def get_tcg_tickets_by_tp(tp_number: str):
         # SQLite is case-insensitive by default for ASCII usually, but let's be safe.
         tickets = db.query(LarkModelTCG).filter(
             LarkModelTCG.tp_number.ilike(f"{tp_number}")
-        ).all()
+        ).order_by(LarkModelTCG.sort_order.asc()).all()
         
         results = []
         for t in tickets:
             results.append({
+                "id": t.record_id, # Crucial for drag and drop
                 "ticket_number": t.tcg_tickets, # Often the key identifier TCG-XXXX
                 "title": t.title,
                 "assignee": t.assignee,
@@ -185,7 +208,8 @@ def get_tcg_tickets_by_tp(tp_number: str):
                 "issue_type": t.issue_type,
                 "status": t.jira_status, # For Kanban grouping
                 "description": t.description,  # Description field
-                "parent_tickets": t.parent_tickets  # Parent tickets reference
+                "parent_tickets": t.parent_tickets,  # Parent tickets reference
+                "sort_order": t.sort_order
             })
             
         return results

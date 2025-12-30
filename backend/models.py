@@ -38,6 +38,7 @@ class LarkModelTCG(Base):
     __tablename__ = "TCG_Tickets"
 
     record_id = Column(String, primary_key=True, index=True)
+    sort_order = Column(Integer, default=0) # Kanban sort order
     updated_at = Column(BigInteger)
 
     # Fields matched from Lark Inspection
