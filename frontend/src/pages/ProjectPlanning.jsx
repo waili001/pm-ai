@@ -164,7 +164,7 @@ export default function ProjectPlanning() {
         }, [projects]);
 
         return (
-            <Box sx={{ overflowX: 'auto', height: 'calc(100vh - 200px)', pb: 2 }}>
+            <Box sx={{ overflowX: 'auto', pb: 2 }}>
                 <Stack direction="row" spacing={2} sx={{ minWidth: 'fit-content', height: '100%' }}>
                     {KANBAN_COLUMNS.map(col => (
                         <Paper key={col} sx={{ width: 300, minWidth: 300, bgcolor: '#f5f5f5', display: 'flex', flexDirection: 'column' }}>
@@ -344,7 +344,7 @@ export default function ProjectPlanning() {
             <Paper sx={{ p: 2, mb: 3 }}>
                 <Grid container spacing={2} alignItems="center">
                     {/* Program Filter - 1st Position */}
-                    <Grid size={{ xs: 12, md: 1 }}>
+                    <Grid size={{ xs: 12, md: 2 }}>
                         <Box sx={{ minWidth: 100, maxWidth: 200 }}>
                             <Autocomplete
                                 options={programsList}
