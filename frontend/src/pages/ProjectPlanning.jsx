@@ -252,34 +252,67 @@ export default function ProjectPlanning() {
     };
 
     // --- Gantt View Components ---
+    // --- Gantt View Components ---
     const GanttChart = () => {
+
+        // Helper to parse date to timestamp
+        const getTimestamp = (val) => {
+            if (!val) return null;
+            if (typeof val === 'number') return val;
+            if (!isNaN(val) && val.toString().length > 10) return parseInt(val);
+            const d = new Date(val);
+            if (!isNaN(d.getTime())) return d.getTime();
+            return null;
+        };
+
         // Filter: Only "In Progress"
         // Data prep for Highcharts Xrange
         const ganttData = useMemo(() => {
-            return projects
+            const now = new Date().getTime();
+
+            // 1. Filter and Prepare raw data with calculated dates
+            const prepared = projects
                 .filter(p => p.status === "In Progress")
-                .map((p, index) => {
-                    // Logic to determine start/end
-                    // due_day_quarter / released_month are all we have.
-                    // Fallback to now -> +1 month if null?
+                .map(p => {
+                    let start = getTimestamp(p.start_date);
+                    let end = getTimestamp(p.due_day);
 
-                    // Mock dates for visualization if real data is missing
-                    // Use a hash of ID to generate deterministic pseudo-random dates within a range?
-                    // Better: Use start of current month as default start, and try to parse `due_day_quarter`.
+                    // Fallbacks
+                    if (!start && !end) {
+                        start = now;
+                        end = now + (30 * 24 * 3600 * 1000); // 30 days
+                    } else if (!start) {
+                        start = end - (30 * 24 * 3600 * 1000);
+                    } else if (!end) {
+                        end = start + (30 * 24 * 3600 * 1000);
+                    }
 
-                    const now = new Date().getTime();
-                    let start = now;
-                    let end = now + (30 * 24 * 3600 * 1000); // +30 days default
+                    if (start > end) {
+                        // Swap if inverted
+                        const temp = start;
+                        start = end;
+                        end = temp;
+                    }
 
                     return {
-                        x: start,
-                        x2: end,
-                        y: index,
-                        name: p.title,
-                        ticket: p.ticket_number,
-                        manager: p.project_manager
+                        ...p,
+                        _start: start,
+                        _end: end
                     };
                 });
+
+            // 2. Sort by Due Day (End Date) Ascending
+            prepared.sort((a, b) => a._end - b._end);
+
+            // 3. Map to Highcharts format with corrected index y
+            return prepared.map((p, index) => ({
+                x: p._start,
+                x2: p._end,
+                y: index,
+                name: p.title,
+                ticket: p.ticket_number,
+                manager: p.project_manager
+            }));
         }, [projects]);
 
         const options = {
@@ -289,7 +322,14 @@ export default function ProjectPlanning() {
             },
             title: { text: null },
             xAxis: {
-                type: 'datetime'
+                type: 'datetime',
+                plotLines: [{
+                    color: '#FF0000',
+                    width: 2,
+                    value: new Date().getTime(),
+                    dashStyle: 'Dash',
+                    zIndex: 5
+                }]
             },
             yAxis: {
                 title: { text: '' },
@@ -306,7 +346,7 @@ export default function ProjectPlanning() {
                 dataLabels: {
                     enabled: true,
                     formatter: function () {
-                        return this.point.name; // Show Title on bar
+                        return this.point.name;
                     },
                     style: {
                         fontSize: '10px',
@@ -319,7 +359,9 @@ export default function ProjectPlanning() {
                 formatter: function () {
                     return '<b>' + this.point.ticket + '</b><br />' +
                         this.point.name + '<br />' +
-                        'PM: ' + this.point.manager;
+                        'PM: ' + this.point.manager + '<br/>' +
+                        'Start: ' + Highcharts.dateFormat('%Y-%m-%d', this.point.x) + '<br/>' +
+                        'Due: ' + Highcharts.dateFormat('%Y-%m-%d', this.point.x2);
                 }
             }
         };
