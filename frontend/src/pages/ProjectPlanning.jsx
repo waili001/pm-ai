@@ -30,6 +30,7 @@ import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import Xrange from 'highcharts/modules/xrange';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { useNavigate } from 'react-router-dom';
 
 // Helper to format due day
 const formatDueDay = (val) => {
@@ -67,6 +68,14 @@ const KANBAN_COLUMNS = [
 const PROJECT_TYPES = ["ALL", "Tech", "Integration", "ICR", "Project"];
 
 export default function ProjectPlanning() {
+    const navigate = useNavigate();
+
+    const handleCardClick = (project) => {
+        // Save ID for ProjectBacklog to restore
+        localStorage.setItem('project_backlog_last_selected', project.id);
+        navigate('/project-backlog');
+    };
+
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(false);
 
@@ -246,14 +255,19 @@ export default function ProjectPlanning() {
                                                             ref={provided.innerRef}
                                                             {...provided.draggableProps}
                                                             {...provided.dragHandleProps}
+                                                            onClick={() => handleCardClick(project)}
                                                             sx={{
                                                                 mb: 1,
+                                                                cursor: 'pointer',
                                                                 // Highlight styles when dragging
                                                                 backgroundColor: snapshot.isDragging ? '#e3f2fd' : 'background.paper',
                                                                 border: snapshot.isDragging ? '2px solid #2196f3' : 'none',
                                                                 boxShadow: snapshot.isDragging ? 6 : 1,
                                                                 transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
-                                                                ...provided.draggableProps.style
+                                                                ...provided.draggableProps.style,
+                                                                '&:hover': {
+                                                                    boxShadow: 3
+                                                                }
                                                             }}
                                                         >
                                                             <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
@@ -335,7 +349,7 @@ export default function ProjectPlanning() {
                         ))}
                     </Stack>
                 </Box>
-            </DragDropContext>
+            </DragDropContext >
         );
     };
 
@@ -399,7 +413,11 @@ export default function ProjectPlanning() {
                 y: index,
                 name: p.title,
                 ticket: p.ticket_number,
-                manager: p.project_manager
+                manager: p.project_manager,
+                completedPct: p.completed_percentage || 0,
+                partialFill: {
+                    amount: (p.completed_percentage || 0) / 100
+                }
             }));
         }, [projects]);
 
@@ -416,7 +434,8 @@ export default function ProjectPlanning() {
                     width: 2,
                     value: new Date().getTime(),
                     dashStyle: 'Dash',
-                    zIndex: 5
+                    zIndex: 5,
+                    label: { text: 'Today', align: 'left', style: { color: 'gray' } }
                 }]
             },
             yAxis: {
@@ -448,6 +467,7 @@ export default function ProjectPlanning() {
                     return '<b>' + this.point.ticket + '</b><br />' +
                         this.point.name + '<br />' +
                         'PM: ' + this.point.manager + '<br/>' +
+                        'Progress: ' + this.point.completedPct + '%<br/>' +
                         'Start: ' + Highcharts.dateFormat('%Y-%m-%d', this.point.x) + '<br/>' +
                         'Due: ' + Highcharts.dateFormat('%Y-%m-%d', this.point.x2);
                 }

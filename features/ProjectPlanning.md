@@ -21,11 +21,16 @@
     *   **Drag-and-Drop (拖拉排序)**：
         *   允許使用者在 **同一狀態欄位 (Column)** 內上下拖曳卡片以調整優先順序。
         *   排序結果會儲存至資料庫 (`sort_order`)，重新整理後保持順序。
+    *   **互動 (Interaction)**：
+        *   點擊卡片將跳轉至 `Product Backlog` 頁面，並自動選取該專案，方便檢視相關 Tickets。
 
 *   **Gantt View (甘特圖檢視)**：
     *   只顯示 `In Progress` 的 Projects。
     *   **時間軸**：起點依據 `Start Date` (若無則推算)，終點依據 `Due Day`。
     *   **排序**：依照 `Due Day` (由近且遠) 排序。
+    *   **進度顯示**：
+        *   Bar 內部顯示完成度 (Partial Fill)。
+        *   Tooltip 顯示具體百分比 (e.g., Progress: 50%)。
     *   **輔助線**：顯示 "Today" (紅色虛線) 標示今日日期。
 
 ## Implementation Details
