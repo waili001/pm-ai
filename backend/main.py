@@ -13,6 +13,8 @@ from routers import project, jobs, system, member
 # Import needed for sync jobs in lifespan
 from jobs import sync_lark_table
 from models import LarkModelTP, LarkModelTCG, LarkModelMember, LarkModelProgram
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 # Configure logging
 logging.basicConfig(
@@ -101,10 +103,22 @@ def read_root():
 
 # Include Routers
 # Include Routers
+# Include Routers
 app.include_router(project.router)
 app.include_router(jobs.router)
 app.include_router(system.router)
 app.include_router(member.router)
+
+# Mount Static Files (Production Mode)
+if os.path.isdir("static"):
+    app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")
+    
+    # SPA Fallback
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        if full_path.startswith("api"):
+            return {"error": "API not found"}
+        return FileResponse("static/index.html")
 
 # Run Scheduler (Legacy startup event, prefer lifespan but keeping for compatibility if needed/mixed)
 @app.on_event("startup")

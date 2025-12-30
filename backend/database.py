@@ -2,7 +2,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
+import os
+
+# Default to current directory, but allow override (e.g., /app/data for Railway Volume)
+DB_DIR = os.getenv("DB_DIR", ".")
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.join(DB_DIR, 'sql_app.db')}"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
