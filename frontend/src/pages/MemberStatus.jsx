@@ -120,6 +120,7 @@ const MemberStatus = () => {
 
     const columns = [
         { field: 'department', headerName: 'Department', width: 130 }, // Implicit in filter but good to show
+        { field: 'team', headerName: 'Team', width: 130 },
         { field: 'member_name', headerName: 'Member', width: 130 },
         { field: 'position', headerName: 'Position', width: 130 },
         {
@@ -164,6 +165,25 @@ const MemberStatus = () => {
                     )) : params.value}
                 </Box>
             )
+        },
+        {
+            field: 'completed_last_7d',
+            headerName: 'Completed (Last 7 Days)',
+            width: 250,
+            renderCell: (params) => {
+                const tickets = params.value || [];
+                if (tickets.length === 0) return '-';
+
+                const firstTicket = tickets[0].number;
+                const count = tickets.length;
+                const displayText = count > 1 ? `${firstTicket}...(${count})` : firstTicket;
+
+                return (
+                    <Box sx={{ py: 1, display: 'flex', alignItems: 'center' }}>
+                        <Typography variant="body2">{displayText}</Typography>
+                    </Box>
+                );
+            }
         },
     ];
 

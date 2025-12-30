@@ -6,12 +6,14 @@
 *   **需記住前一次搜尋的條件 (LocalStorage)**：下次進入頁面自動還原。
 *   **頁面寬度需佔滿 (Full Width)**
 *   **根據所選擇的部門來顯示組員列表**：每個欄位皆需支援排序
-*   **組員列表的欄位**：
+    *   組員列表的欄位：
     *   部門名稱
+    *   Team (新增)
     *   組員名稱
     *   職位 (Position)
     *   In-Progress TP
     *   In Progress 的單子
+    *   Completed (Last 7 Days) (新增)
 
 ### Field Logic Details
 *   **[In-Progress TP] (原 Current Working TP) 的判斷邏輯**：
@@ -22,14 +24,20 @@
     5.  **點擊行為**：點擊連結後，直接開啟新視窗跳轉至該 Ticket 的 Jira 頁面。
 
 *   **[In-Progress Tickets]**：
-    1.  若有多筆，請換行顯示。顯示 `Ticket Number`。
-    2.  完整資訊 (Number + Name) 於 **Hover Tooltip** 顯示。
+    1.  **僅顯示狀態為 `In Progress` 的單子**。(排除 Resolved 等其他狀態)
+    2.  若有多筆，請換行顯示。顯示 `Ticket Number`。
+    3.  完整資訊 (Number + Name) 於 **Hover Tooltip** 顯示。
     3.  **點擊行為**：點擊 Ticket Number 後，彈出視窗 (Dialog) 顯示詳細內容：
         *   Ticket Number
         *   Content (Title)
         *   Status
         *   Assignee
         *   Description (需解析 Jira Format 為 HTML)
+
+*   **[Completed (Last 7 Days)]**：
+    1.  **資料邏輯**：查詢 `resolved_by` 為該組員，且 `resolved_date` 在最近 7 天內的 Ticket。
+    2.  **顯示規則**：僅顯示一筆單號，若超過一張則加上數量。
+    3.  **範例**：`TCG-123456...(8)`。
 
 ## Precautions (注意事項)
 > [!IMPORTANT]

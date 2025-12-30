@@ -2,7 +2,7 @@
 > 新增一個 dashboard 顯示某一個部門的專案狀態
 
 ## Description
-*   **新增一個 Menu**：`Project Planning`
+*   **新增一個 Menu**：`Project Planning` ，顯示在 Home 下面 且 Product Backlog 上方 的位置。 
 *   **定義**：TP 就是指 Project
 *   **頁面頂部過濾器**：
     *   選擇部門 (`Department`)

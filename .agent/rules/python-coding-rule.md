@@ -20,3 +20,12 @@ trigger: manual
 5. 前後端資料結構需嚴格同步。當後端回傳結構變更 (如 String -> Object) 時，前端渲染邏輯 (如 renderCell) 必須同步更新，否則會導致 React 渲染錯誤 (Objects are not valid as a React child)。
 
 6. 「使用 replace_file_content 時，請務必確認 TargetContent 的範圍精確，且 ReplacementContent 不應包含原本已經存在的周圍程式碼 (除非是為了修改它們)，# Antigravity User Rules (Strict Mode)
+
+7.  Atomic Edits (原子化修改)：
+新增功能時，只准「插入」新程式碼，嚴禁刪除或修改原本的程式碼區塊 (除非它直接衝突)。
+若覺得舊程式碼有問題，必須另外開一個 Task 專門處理重構，不能夾帶。
+
+8. Minimal Target Content (最小化錨點)：
+使用 replace_file_content 時，TargetContent 只能包含「定位點」的前後 1-2 行，不能包含一整大塊既有邏輯。
+正確做法：只 Target if current_tps_map: 這兩行，然後在後面 append 新邏輯。
+錯誤做法：Target 了 20 行包含迴圈的代碼，然後整塊重寫。

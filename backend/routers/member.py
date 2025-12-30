@@ -80,10 +80,13 @@ def get_member_status(department: str):
             
             for t in tickets:
                 ticket_label = f"{t.tcg_tickets} {t.title}"
-                ticket_summaries.append({
-                    "number": t.tcg_tickets,
-                    "full": ticket_label
-                })
+                
+                # Filter for "In Progress Tickets" column: Only show In Progress status
+                if t.jira_status == 'In Progress':
+                    ticket_summaries.append({
+                        "number": t.tcg_tickets,
+                        "full": ticket_label
+                    })
                 
                 tp_num = t.tp_number
                 # If TP num is empty, maybe try parent?
@@ -94,6 +97,7 @@ def get_member_status(department: str):
                         current_tps_map[tp_num] = {"tp_number": tp_num}
             
             # 3. Resolve TP Dept
+            tps = [] # Initialize to avoid UnboundLocalError if current_tps_map is empty
             if current_tps_map:
                 tp_nums = list(current_tps_map.keys())
                  # Case insensitive lookup if needed, but assuming standard format
@@ -105,7 +109,6 @@ def get_member_status(department: str):
             
             # Format Result
             tp_display_list = []
-            tp_dept_list = []
             
             for tp_data in current_tps_map.values():
                 tp_str = f"{tp_data['tp_number']} {tp_data.get('title', '')}"
@@ -114,18 +117,31 @@ def get_member_status(department: str):
                     "full": tp_str,
                     "department": tp_data.get('department', '')
                 })
-                if tp_data.get('department'):
-                    tp_dept_list.append(tp_data['department'])
             
+            
+            # 4. Find Recent Completed Tickets (Last 7 Days)
+            # resolved_by == member AND resolved > now - 7 days
+            seven_days_ago_ts = int((datetime.now() - timedelta(days=7)).timestamp() * 1000)
+            
+            completed_tickets = db.query(LarkModelTCG).filter(
+                and_(
+                    LarkModelTCG.resolved_by.ilike(f"%{member_name}%"),
+                    LarkModelTCG.resolved > seven_days_ago_ts
+                )
+            ).order_by(LarkModelTCG.resolved.desc()).all()
+            
+            completed_summary = [{"number": ct.tcg_tickets} for ct in completed_tickets]
+
             results.append({
                 "department": m.department,
+                "team": m.team, # Added Team field
                 "member_name": member_name,
                 "member_no": m.member_no,
-                "team": m.team,
                 "position": m.position,
                 "current_tps": tp_display_list,
                 "in_progress_tickets": ticket_summaries,
-                "project_dept": ", ".join(set(tp_dept_list)) # Unique depts
+                "completed_last_7d": completed_summary, # New field
+                "project_dept": ", ".join(set(tp.department for tp in tps if tp.department)) 
             })
             
         return results
