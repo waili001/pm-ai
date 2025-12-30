@@ -71,6 +71,18 @@ export default function Layout() {
                             </ListItemButton>
                         </ListItem>
 
+                        <ListItem disablePadding>
+                            <ListItemButton
+                                selected={location.pathname === '/project-planning'}
+                                onClick={() => navigate('/project-planning')}
+                            >
+                                <ListItemIcon>
+                                    <Dashboard />
+                                </ListItemIcon>
+                                <ListItemText primary="Project Planning" />
+                            </ListItemButton>
+                        </ListItem>
+
 
 
                         <ListItem disablePadding>

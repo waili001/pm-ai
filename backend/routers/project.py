@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from database import SessionLocal
-from models import LarkModelTP, LarkModelTCG
+from models import LarkModelTP, LarkModelTCG, LarkModelDept
 
 router = APIRouter(
     prefix="/api/project",
@@ -34,6 +34,60 @@ def get_active_tps():
                 "title": title,
                 "label": label,
                 "status": tp.jira_status
+            })
+        
+        return results
+    finally:
+        db.close()
+
+@router.get("/planning")
+def get_planning_projects(department: str = None, project_type: str = None):
+    """
+    Fetch projects for Planning Dashboard with optional filtering.
+    - department: string to match (partial match vs exact match TBD, using ilike for now)
+    - project_type: exact match
+    """
+    db = SessionLocal()
+    try:
+        query = db.query(LarkModelTP)
+
+        if department and department != "ALL":
+             # department is stored as Comma separated string potentially
+             query = query.filter(LarkModelTP.department.ilike(f"%{department}%"))
+        
+        if project_type and project_type != "ALL":
+             query = query.filter(LarkModelTP.project_type == project_type)
+
+        tps = query.all()
+        
+        # Logic: Filter out "Closed" projects older than 4 months
+        # 4 months ~ 120 days
+        import time
+        now_ts = int(time.time() * 1000)
+        cutoff_ts = now_ts - (120 * 24 * 3600 * 1000)
+
+        results = []
+        for tp in tps:
+            # Check for Closed filter logic
+            if tp.jira_status == "Closed":
+                if tp.updated_at and tp.updated_at < cutoff_ts:
+                    continue # Skip old closed projects
+
+            # Handle potential None values
+            t_num = tp.ticket_number or "Unknown"
+            title = tp.title or "No Title"
+            
+            results.append({
+                "id": tp.record_id,
+                "ticket_number": t_num,
+                "title": title,
+                "status": tp.jira_status, # vital for Kanban
+                "department": tp.department,
+                "project_type": tp.project_type,
+                "project_manager": tp.project_manager,
+                "released_month": tp.released_month,
+                "due_day_quarter": tp.due_day_quarter,
+                "icr_count": tp.icr_count,
             })
         
         return results
@@ -101,5 +155,18 @@ def get_ticket_details(ticket_number: str):
             }
             
         return None # Or raise 404, but frontend handles null check
+    finally:
+        db.close()
+
+@router.get("/departments")
+def get_departments():
+    """Fetch all unique departments."""
+    db = SessionLocal()
+    try:
+        # Fetch distinct departments from LarkModelDept
+        depts = db.query(LarkModelDept.department).distinct().filter(LarkModelDept.department != None).all()
+        # Flatten result list of tuples [('DeptA',), ('DeptB',)] -> ['DeptA', 'DeptB']
+        results = [d[0] for d in depts if d[0]]
+        return sorted(results)
     finally:
         db.close()

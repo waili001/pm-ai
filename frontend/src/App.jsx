@@ -6,6 +6,7 @@ import Layout from './components/Layout'
 import SqliteAdmin from './pages/SqliteAdmin'
 
 import ProjectBacklog from './pages/ProjectBacklog';
+import ProjectPlanning from './pages/ProjectPlanning';
 import JobConfig from './pages/JobConfig';
 import MemberStatus from './pages/MemberStatus'; // Import MemberStatus
 
@@ -59,6 +60,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="admin/sqlite" element={<SqliteAdmin />} />
           <Route path="admin/jobs" element={<JobConfig />} />
+          <Route path="project-planning" element={<ProjectPlanning />} />
           <Route path="project-backlog" element={<ProjectBacklog />} />
           <Route path="member-status" element={<MemberStatus />} /> {/* Add Route */}
         </Route>

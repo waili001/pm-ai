@@ -16,3 +16,13 @@
 
 *   **Gantt View (甘特圖檢視)**：
     *   只顯示 `In Progress` 的 Projects。
+
+## Implementation Details
+*   **Department Data Source**: Fetch from `TCG_DEPT` table via `/api/project/departments`.
+*   **UI Requirements**:
+    *   Dropdowns (Department, Project Type) must have `min-width: 200px`.
+    *   Kanban cards must match the styling of `Project Backlog` (Title, PM, Status, Jira Link).
+    *   Ticket Numbers must be clickable links to Jira.
+    *   **Persistence**: "Department" and "Project Type" selections must be saved in `localStorage` and restored on page load.
+    *   **Department Filter**: Add "ALL" option (Default).
+    *   **Data Logic**: For projects with `status="Closed"`, only display if `updated_at` is within the last 4 months.

@@ -1,101 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>PM AI API Documentation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.css" />
     <style>
-        html { box-sizing: border-box; overflow: -moz-scrollbars-vertical; overflow-y: scroll; }
-        *, *:before, *:after { box-sizing: inherit; }
-        body { margin: 0; background: #fafafa; }
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+
+        *,
+        *:before,
+        *:after {
+            box-sizing: inherit;
+        }
+
+        body {
+            margin: 0;
+            background: #fafafa;
+        }
     </style>
 </head>
+
 <body>
     <div id="swagger-ui"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.js"></script>
     <script>
-    window.onload = function() {
-        const spec = {
-            "openapi": "3.0.0",
-            "info": {
-                "title": "PM AI API",
-                "version": "1.0.0"
-            },
-            "paths": {
-                "/api/members/departments": {
-                    "get": {
-                        "summary": "Get all departments",
-                        "responses": {
-                            "200": { "description": "List of departments" }
-                        }
-                    }
+        window.onload = function () {
+            const spec = {
+                "openapi": "3.0.0",
+                "info": {
+                    "title": "PM AI API",
+                    "version": "1.0.0"
                 },
-                "/api/members/status": {
-                    "get": {
-                        "summary": "Get Member Status",
-                        "parameters": [
-                            {
-                                "name": "department",
-                                "in": "query",
-                                "required": false,
-                                "schema": { "type": "string" }
+                "paths": {
+                    "/api/members/departments": {
+                        "get": {
+                            "summary": "Get all departments",
+                            "responses": {
+                                "200": { "description": "List of departments" }
                             }
-                        ],
-                        "responses": {
-                            "200": { "description": "Member status list" }
                         }
-                    }
-                },
-                "/api/project/ticket/{ticket_number}": {
-                    "get": {
-                        "summary": "Get Ticket Details",
-                        "description": "Fetch details for a specific ticket (TCG or TP).",
-                        "parameters": [
-                            {
-                                "name": "ticket_number",
-                                "in": "path",
-                                "required": true,
-                                "schema": { "type": "string" }
+                    },
+                    "/api/members/status": {
+                        "get": {
+                            "summary": "Get Member Status",
+                            "parameters": [
+                                {
+                                    "name": "department",
+                                    "in": "query",
+                                    "required": false,
+                                    "schema": { "type": "string" }
+                                }
+                            ],
+                            "responses": {
+                                "200": { "description": "Member status list" }
                             }
-                        ],
-                        "responses": {
-                            "200": { 
-                                "description": "Ticket details",
-                                "content": {
-                                    "application/json": {
-                                        "schema": {
-                                            "type": "object",
-                                            "properties": {
-                                                "ticket_number": { "type": "string" },
-                                                "title": { "type": "string" },
-                                                "status": { "type": "string" },
-                                                "assignee": { "type": "string" },
-                                                "reporter": { "type": "string" },
-                                                "description": { "type": "string" },
-                                                "issue_type": { "type": "string" }
+                        }
+                    },
+                    "/api/project/active": {
+                        "get": {
+                            "summary": "Get Active TP Projects",
+                            "description": "Fetch all active TP projects (Status != Closed/Resolved).",
+                            "responses": {
+                                "200": { "description": "List of active projects" }
+                            }
+                        }
+                    },
+                    "/api/project/planning": {
+                        "get": {
+                            "summary": "Get Project Planning Data",
+                            "description": "Fetch projects for Planning Dashboard with optional filtering.",
+                            "parameters": [
+                                {
+                                    "name": "department",
+                                    "in": "query",
+                                    "required": false,
+                                    "schema": { "type": "string" }
+                                },
+                                {
+                                    "name": "project_type",
+                                    "in": "query",
+                                    "required": false,
+                                    "schema": { "type": "string" }
+                                }
+                            ],
+                            "responses": {
+                                "200": { "description": "List of projects for planning" }
+                            }
+                        }
+                    },
+                    "/api/project/departments": {
+                        "get": {
+                            "summary": "Get Project Departments",
+                            "description": "Fetch all unique departments from TCG_DEPT.",
+                            "responses": {
+                                "200": { "description": "List of department names" }
+                            }
+                        }
+                    },
+                    "/api/project/{tp_number}/tcg_tickets": {
+                        "get": {
+                            "summary": "Get TCG Tickets by TP",
+                            "parameters": [
+                                {
+                                    "name": "tp_number",
+                                    "in": "path",
+                                    "required": true,
+                                    "schema": { "type": "string" }
+                                }
+                            ],
+                            "responses": {
+                                "200": { "description": "List of TCG tickets for the project" }
+                            }
+                        }
+                    },
+                    "/api/project/ticket/{ticket_number}": {
+                        "get": {
+                            "summary": "Get Ticket Details",
+                            "description": "Fetch details for a specific ticket (TCG or TP).",
+                            "parameters": [
+                                {
+                                    "name": "ticket_number",
+                                    "in": "path",
+                                    "required": true,
+                                    "schema": { "type": "string" }
+                                }
+                            ],
+                            "responses": {
+                                "200": {
+                                    "description": "Ticket details",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "ticket_number": { "type": "string" },
+                                                    "title": { "type": "string" },
+                                                    "status": { "type": "string" },
+                                                    "assignee": { "type": "string" },
+                                                    "reporter": { "type": "string" },
+                                                    "description": { "type": "string" },
+                                                    "issue_type": { "type": "string" }
+                                                }
                                             }
                                         }
                                     }
-                                }
-                            },
-                            "404": { "description": "Ticket not found" }
+                                },
+                                "404": { "description": "Ticket not found" }
+                            }
                         }
                     }
                 }
-            }
-        };
+            };
 
-        window.ui = SwaggerUIBundle({
-            spec: spec,
-            dom_id: '#swagger-ui',
-            presets: [
-                SwaggerUIBundle.presets.apis,
-                SwaggerUIStandalonePreset
-            ],
-            layout: "StandaloneLayout"
-        });
-    };
+            window.ui = SwaggerUIBundle({
+                spec: spec,
+                dom_id: '#swagger-ui',
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                layout: "StandaloneLayout"
+            });
+        };
     </script>
 </body>
+
 </html>
