@@ -67,10 +67,12 @@ async def lifespan(app: FastAPI):
     scheduler.start()
     logger.info("Scheduler started")
     
-    # Run once on startup for immediate data
-    run_sync_jobs() # Run immediately on startup
+    # Run once on startup using scheduler (non-blocking)
+    from datetime import datetime
+    scheduler.add_job(run_sync_jobs, 'date', run_date=datetime.now())
+    
     from jobs import calculate_tp_completion
-    calculate_tp_completion() # Run completion calculation on startup
+    scheduler.add_job(calculate_tp_completion, 'date', run_date=datetime.now())
     scheduler.add_job(calculate_tp_completion, 'interval', hours=1)
     
     
