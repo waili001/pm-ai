@@ -18,6 +18,9 @@ WORKDIR /app
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Ensure logs are visible immediately
+ENV PYTHONUNBUFFERED=1
+
 # Copy Backend Code
 COPY backend/ ./
 
