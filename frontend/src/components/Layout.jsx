@@ -86,6 +86,18 @@ export default function Layout() {
                         </ListItem>
 
                         <ListItem disablePadding>
+                            <ListItemButton
+                                selected={location.pathname === '/member-status'}
+                                onClick={() => navigate('/member-status')}
+                            >
+                                <ListItemIcon>
+                                    <Dashboard />
+                                </ListItemIcon>
+                                <ListItemText primary="Member Status" />
+                            </ListItemButton>
+                        </ListItem>
+
+                        <ListItem disablePadding>
                             <ListItemButton onClick={handleAdminClick}>
                                 <ListItemIcon>
                                     <AdminPanelSettings />

@@ -68,3 +68,38 @@ def get_tcg_tickets_by_tp(tp_number: str):
         return results
     finally:
         db.close()
+
+@router.get("/ticket/{ticket_number}")
+def get_ticket_details(ticket_number: str):
+    """Fetch detailed information for a specific ticket (TCG or TP)."""
+    db = SessionLocal()
+    try:
+        # Search in TCG first (has description)
+        tcg = db.query(LarkModelTCG).filter(LarkModelTCG.tcg_tickets == ticket_number).first()
+        if tcg:
+            return {
+                "ticket_number": tcg.tcg_tickets,
+                "title": tcg.title,
+                "status": tcg.jira_status,
+                "assignee": tcg.assignee,
+                "reporter": tcg.reporter,
+                "description": tcg.description, # TCG has description
+                "issue_type": tcg.issue_type
+            }
+
+        # Search in TP
+        tp = db.query(LarkModelTP).filter(LarkModelTP.ticket_number == ticket_number).first()
+        if tp:
+            return {
+                "ticket_number": tp.ticket_number,
+                "title": tp.title,
+                "status": tp.jira_status,
+                "assignee": tp.project_manager, # Map PM to assignee for TP
+                "reporter": "-", # TP might not have explicit reporter mapped
+                "description": None, # TP model doesn't currently map description
+                "issue_type": "TP"
+            }
+            
+        return None # Or raise 404, but frontend handles null check
+    finally:
+        db.close()

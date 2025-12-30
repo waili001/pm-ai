@@ -1,11 +1,26 @@
 Feature : 新增一個 dashboard 顯示 某一個部門的 底下的組員工作狀態
 Description : 
     - 頁面最上面有一個row 可以選擇要檢視那一個部門 ( from Department) 
-    - 根舉所選擇的部門來顯示組員列表
-    - 組員列表的欄位 : 部門名稱 / 組員名稱 / 目前工作的TP / In Progress的單子 / Project所屬的部門   
-      -- [目前工作 tp] 的判斷邏輯
+    - 需記住前一次搜尋的條件 (LocalStorage)，下次進入頁面自動還原。
+    - 頁面寬度需佔滿 (Full Width)
+    - 根舉所選擇的部門來顯示組員列表 (每個欄位皆需支援排序)
+    - 組員列表的欄位 : 部門名稱 / 組員名稱 / 職位 (Position) / In-Progress TP / In Progress的單子 / Project所屬的部門   
+      -- [In-Progress TP] (原Current Working TP) 的判斷邏輯
       --- 查詢 lark tcg table 中 assignee 為 這個組員 且狀態為的 in-progress 的單子
       --- 查詢 lark tcg table 中 resolved_by 為 這個組員 且 updated_at 大於昨天 0點0分 的單子
       --- 這個單子的所屬的 tp  或是 這個單子的 parent_tickets 的單子所屬的tp
+      --- 若有多筆，請換行顯示。顯示 "TP Ticket Number + TP Name"，並設為 Hyperlink。
+      --- 點擊連結後，直接開啟新視窗跳轉至該 Ticket 的 Jira 頁面。 
+      --  In Progress的單子
+      --- 若有多筆，請換行顯示。顯示 Ticket Number，完整資訊 (Number + Name) 於 Hover Tooltip 顯示。
+      --- 點擊 Ticket Number 後，彈出視窗 (Dialog) 顯示詳細內容：
+          - Ticket Number
+          - Content (Title)
+          - Status
+          - Assignee
+          - Description (需解析 Jira Format 為 HTML)
       --  Project所屬的部門   
       --- 所屬 tp 的 部門欄位。 查詢 lar_tp的表。
+      
+    - 注意事項 (Precautions):
+       - 前後端資料結構需嚴格同步。當後端回傳結構變更 (如 String -> Object) 時，前端渲染邏輯 (如 renderCell) 必須同步更新，否則會導致 React 渲染錯誤 (Objects are not valid as a React child)。

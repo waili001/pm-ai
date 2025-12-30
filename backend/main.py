@@ -8,7 +8,7 @@ import logging
 import os
 
 # Import Routers
-from routers import project, jobs, system
+from routers import project, jobs, system, member
 
 # Import needed for sync jobs in lifespan
 from jobs import sync_lark_table
@@ -88,9 +88,11 @@ def read_root():
     return {"message": "Jira verification job started in background"}
 
 # Include Routers
+# Include Routers
 app.include_router(project.router)
 app.include_router(jobs.router)
 app.include_router(system.router)
+app.include_router(member.router)
 
 # Run Scheduler (Legacy startup event, prefer lifespan but keeping for compatibility if needed/mixed)
 @app.on_event("startup")

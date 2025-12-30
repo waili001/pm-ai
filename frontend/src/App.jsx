@@ -5,8 +5,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import SqliteAdmin from './pages/SqliteAdmin'
 
-import JobConfig from './pages/JobConfig'
-import ProjectBacklog from './pages/ProjectBacklog'
+import ProjectBacklog from './pages/ProjectBacklog';
+import JobConfig from './pages/JobConfig';
+import MemberStatus from './pages/MemberStatus'; // Import MemberStatus
+
 
 function Home() {
   const [data, setData] = useState(null)
@@ -58,6 +60,7 @@ function App() {
           <Route path="admin/sqlite" element={<SqliteAdmin />} />
           <Route path="admin/jobs" element={<JobConfig />} />
           <Route path="project-backlog" element={<ProjectBacklog />} />
+          <Route path="member-status" element={<MemberStatus />} /> {/* Add Route */}
         </Route>
       </Routes>
     </BrowserRouter>
