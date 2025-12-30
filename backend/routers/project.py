@@ -88,6 +88,9 @@ def get_planning_projects(department: str = None, project_type: str = None):
                 "released_month": tp.released_month,
                 "due_day_quarter": tp.due_day_quarter,
                 "icr_count": tp.icr_count,
+                # New Fields
+                "released_date": tp.released_date,
+                "due_day": tp.due_day,
             })
         
         return results
@@ -150,7 +153,9 @@ def get_ticket_details(ticket_number: str):
                 "status": tp.jira_status,
                 "assignee": tp.project_manager, # Map PM to assignee for TP
                 "reporter": "-", # TP might not have explicit reporter mapped
-                "description": None, # TP model doesn't currently map description
+                "description": tp.description, 
+                "released_date": tp.released_date,
+                "due_day": tp.due_day,
                 "issue_type": "TP"
             }
             

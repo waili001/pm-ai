@@ -120,7 +120,7 @@ export default function SqliteAdmin() {
             <Typography variant="h5">SQLite Admin</Typography>
 
             <Paper sx={{ p: 2 }}>
-                <FormControl fullWidth sx={{ mb: 2 }}>
+                <FormControl fullWidth sx={{ mb: 2, maxWidth: 400 }}>
                     <InputLabel id="table-select-label">Select Table</InputLabel>
                     <Select
                         labelId="table-select-label"

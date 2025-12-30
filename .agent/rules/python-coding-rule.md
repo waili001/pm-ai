@@ -29,3 +29,9 @@ trigger: manual
 使用 replace_file_content 時，TargetContent 只能包含「定位點」的前後 1-2 行，不能包含一整大塊既有邏輯。
 正確做法：只 Target if current_tps_map: 這兩行，然後在後面 append 新邏輯。
 錯誤做法：Target 了 20 行包含迴圈的代碼，然後整塊重寫。
+
+9. 相同類型/職責的檔案要放在同一個目錄:
+debug 目錄 放debug 的檔案
+verify 目錄放 verify 的檔案
+service 目錄 放 service 的檔案
+

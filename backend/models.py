@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, BigInteger, Text, JSON
 from database import Base
 
 class LarkModelTP(Base):
-    __tablename__ = "lark_tp"
+    __tablename__ = "TP_Projects"
     
     record_id = Column(String, primary_key=True, index=True)
     updated_at = Column(BigInteger) # Internal sync tracking
@@ -17,13 +17,18 @@ class LarkModelTP(Base):
     project_manager = Column(Text) # Person List -> Names
     project_type = Column(String)
     released_month = Column(String) # JSON -> text
+    # New Fields
+    released_date = Column(String) # Lark Date (ms) or formatted
+    description = Column(Text)
+    due_day = Column(String)
+    
     source_id = Column(Text)
     ticket_number = Column(Text)
     title = Column(Text) # List of text -> String
 
 
 class LarkModelTCG(Base):
-    __tablename__ = "lark_tcg"
+    __tablename__ = "TCG_Tickets"
 
     record_id = Column(String, primary_key=True, index=True)
     updated_at = Column(BigInteger)
@@ -112,4 +117,34 @@ class LarkModelMember(Base):
         "Position": "position",
         "Team": "team",
         "Remark": "remark"
+    }
+
+
+class LarkModelProgram(Base):
+    __tablename__ = "TP_PROGRAM"
+    
+    record_id = Column(String, primary_key=True, index=True)
+    updated_at = Column(BigInteger)
+    
+    # Specific Fields
+    no = Column(String)
+    program_title = Column(Text)
+    tp = Column(Text) # List -> Comma separated or Relation ID
+    tp_title = Column(Text)
+    department = Column(Text)
+    tp_status = Column(String)
+    progress = Column(String) # or Integer/Float depending on Lark field type, usually Text or Number
+    due_day = Column(String) # Date/Time
+    description = Column(Text)
+
+    lark_mapping = {
+        "No": "no",
+        "Program Title": "program_title",
+        "TP": "tp",
+        "TP Title": "tp_title",
+        "Department": "department",
+        "TP Status": "tp_status",
+        "Progress": "progress",
+        "Due Day": "due_day",
+        "Description": "description"
     }

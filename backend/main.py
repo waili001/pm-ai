@@ -12,7 +12,7 @@ from routers import project, jobs, system, member
 
 # Import needed for sync jobs in lifespan
 from jobs import sync_lark_table
-from models import LarkModelTP, LarkModelTCG, LarkModelMember
+from models import LarkModelTP, LarkModelTCG, LarkModelMember, LarkModelProgram
 
 # Configure logging
 logging.basicConfig(
@@ -40,11 +40,19 @@ TCG_APP_TOKEN = os.getenv("TCG_APP_TOKEN")
 TCG_TABLE_ID = os.getenv("TCG_TABLE_ID")
 MEMBER_APP_TOKEN = os.getenv("MEMBER_APP_TOKEN")
 MEMBER_TABLE_ID = os.getenv("MEMBER_TABLE_ID")
+PROGRAM_APP_TOKEN = os.getenv("PROGRAM_APP_TOKEN")
+PROGRAM_TABLE_ID = os.getenv("PROGRAM_TABLE_ID")
 
 def run_sync_jobs(force_full: bool = False):
     logger.info(f"Running sync jobs... (Force Full: {force_full})")
     sync_lark_table(TP_APP_TOKEN, TP_TABLE_ID, LarkModelTP, force_full=force_full)
+    sync_lark_table(TP_APP_TOKEN, TP_TABLE_ID, LarkModelTP, force_full=force_full)
     sync_lark_table(TCG_APP_TOKEN, TCG_TABLE_ID, LarkModelTCG, force_full=force_full)
+    
+    # Program Sync
+    if PROGRAM_APP_TOKEN and PROGRAM_TABLE_ID:
+        sync_lark_table(PROGRAM_APP_TOKEN, PROGRAM_TABLE_ID, LarkModelProgram, force_full=force_full)
+
     # Member Info Sync (15 min interval via scheduler)
     if MEMBER_APP_TOKEN and MEMBER_TABLE_ID:
         sync_lark_table(MEMBER_APP_TOKEN, MEMBER_TABLE_ID, LarkModelMember, force_full=force_full)
