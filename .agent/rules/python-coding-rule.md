@@ -31,7 +31,7 @@ trigger: manual
 錯誤做法：Target 了 20 行包含迴圈的代碼，然後整塊重寫。
 
 9. 相同類型/職責的檔案要放在同一個目錄:
-debug 目錄 放debug 的檔案
-verify 目錄放 verify 的檔案
+debug 目錄 放 test/debug 的檔案
+verify 目錄放 test/verify 的檔案
 service 目錄 放 service 的檔案
 

@@ -71,11 +71,26 @@
                             }
                         }
                     },
+                    "/api/project/programs": {
+                        "get": {
+                            "summary": "Get Programs",
+                            "description": "Fetch all unique program titles from TP_PROGRAM.",
+                            "responses": {
+                                "200": { "description": "List of program titles" }
+                            }
+                        }
+                    },
                     "/api/project/planning": {
                         "get": {
                             "summary": "Get Project Planning Data",
                             "description": "Fetch projects for Planning Dashboard with optional filtering.",
                             "parameters": [
+                                {
+                                    "name": "program",
+                                    "in": "query",
+                                    "required": false,
+                                    "schema": { "type": "string" }
+                                },
                                 {
                                     "name": "department",
                                     "in": "query",

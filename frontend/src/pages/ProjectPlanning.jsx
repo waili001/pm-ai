@@ -22,14 +22,33 @@ import {
 import {
     ViewKanban,
     ViewTimeline,
+    Event as EventIcon
 } from '@mui/icons-material';
+
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import Xrange from 'highcharts/modules/xrange';
 
+// Helper to format due day
+const formatDueDay = (val) => {
+    if (!val) return null;
+    // If it's a long timestamp number string
+    if (!isNaN(val) && val.toString().length > 10) {
+        return new Date(parseInt(val)).toLocaleDateString();
+    }
+    return val;
+};
+
 // Initialize Highcharts module
+// Fix for "Xrange is not a function" (ESM/CJS interop)
 try {
-    Xrange(Highcharts);
+    if (typeof Xrange === "function") {
+        Xrange(Highcharts);
+    } else if (Xrange && typeof Xrange.default === "function") {
+        Xrange.default(Highcharts);
+    } else {
+        console.warn("Could not find Xrange function in module:", Xrange);
+    }
 } catch (e) {
     console.error("Failed to load Highcharts Xrange module", e);
 }
@@ -51,30 +70,40 @@ export default function ProjectPlanning() {
 
     // Filters
     // Read initial state from localStorage or default
+    const [program, setProgram] = useState(() => localStorage.getItem('planning_program') || "ALL");
     const [department, setDepartment] = useState(() => localStorage.getItem('planning_department') || "ALL");
     const [projectType, setProjectType] = useState(() => localStorage.getItem('planning_project_type') || "ALL");
     const [viewMode, setViewMode] = useState("KANBAN"); // KANBAN or GANTT
 
-    // Departments state
+    // Data Lists
+    const [programsList, setProgramsList] = useState([]);
     const [departmentsList, setDepartmentsList] = useState([]);
 
-    // Fetch Departments on Mount
+    // Fetch filters options on mount
     useEffect(() => {
-        // Use full URL to avoid proxy issues if not configured
+        // Fetch Departments
         fetch('http://127.0.0.1:8000/api/project/departments')
             .then(res => res.json())
             .then(data => {
-                // Add "ALL" option at the beginning
                 setDepartmentsList(["ALL", ...data]);
             })
             .catch(err => console.error("Error fetching departments:", err));
+
+        // Fetch Programs
+        fetch('http://127.0.0.1:8000/api/project/programs')
+            .then(res => res.json())
+            .then(data => {
+                setProgramsList(["ALL", ...data]);
+            })
+            .catch(err => console.error("Error fetching programs:", err));
     }, []);
 
     // Persistence Effect
     useEffect(() => {
+        if (program) localStorage.setItem('planning_program', program);
         if (department) localStorage.setItem('planning_department', department);
         if (projectType) localStorage.setItem('planning_project_type', projectType);
-    }, [department, projectType]);
+    }, [program, department, projectType]);
 
     const fetchProjects = () => {
         setLoading(true);
@@ -86,6 +115,7 @@ export default function ProjectPlanning() {
         // or filter it out here. Let's pass it so backend sees explicit user intent if needed, 
         // OR pass nothing if "ALL" to keep URL clean?
         // Let's pass it because backend `project.py` updated to check `department != "ALL"`.
+        if (program && program !== "ALL") params.append("program", program);
         if (department && department !== "ALL") params.append("department", department);
         if (projectType && projectType !== "ALL") params.append("project_type", projectType);
 
@@ -103,7 +133,7 @@ export default function ProjectPlanning() {
 
     useEffect(() => {
         fetchProjects();
-    }, [department, projectType]);
+    }, [program, department, projectType]);
 
     const handleViewChange = (event, newView) => {
         if (newView !== null) {
@@ -170,6 +200,16 @@ export default function ProjectPlanning() {
                                             <Typography variant="body2" sx={{ mb: 1, lineHeight: 1.3 }}>
                                                 {project.title}
                                             </Typography>
+                                            {/* Due Day */}
+                                            {project.due_day && (
+                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, color: 'text.secondary' }}>
+                                                    <EventIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                                                    <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
+                                                        {formatDueDay(project.due_day)}
+                                                    </Typography>
+                                                </Box>
+                                            )}
+
                                             <Stack direction="row" justifyContent="space-between" alignItems="center">
                                                 <Chip
                                                     label={project.project_manager || "No PM"}
@@ -258,8 +298,8 @@ export default function ProjectPlanning() {
             }],
             tooltip: {
                 formatter: function () {
-                    return '<b>' + this.point.ticket + '</b><br/>' +
-                        this.point.name + '<br/>' +
+                    return '<b>' + this.point.ticket + '</b><br />' +
+                        this.point.name + '<br />' +
                         'PM: ' + this.point.manager;
                 }
             }
@@ -284,31 +324,51 @@ export default function ProjectPlanning() {
             {/* Header / Filters */}
             <Paper sx={{ p: 2, mb: 3 }}>
                 <Grid container spacing={2} alignItems="center">
-                    <Grid size={{ xs: 12, md: 3 }}>
-                        <Box sx={{ minWidth: 200 }}>
+                    {/* Program Filter - 1st Position */}
+                    <Grid size={{ xs: 12, md: 1 }}>
+                        <Box sx={{ minWidth: 100, maxWidth: 200 }}>
+                            <Autocomplete
+                                options={programsList}
+                                renderInput={(params) => <TextField {...params} label="Program" />}
+                                value={program}
+                                onChange={(e, newVal) => setProgram(newVal)}
+                                freeSolo
+                            />
+                        </Box>
+                    </Grid>
+
+                    {/* Department Filter - 2nd Position */}
+                    <Grid size={{ xs: 12, md: 1 }}>
+                        <Box sx={{ minWidth: 100, maxWidth: 200 }}>
                             <Autocomplete
                                 options={departmentsList}
                                 renderInput={(params) => <TextField {...params} label="Department" />}
                                 value={department}
                                 onChange={(e, newVal) => setDepartment(newVal)}
+                                freeSolo
                             />
                         </Box>
                     </Grid>
-                    <Grid size={{ xs: 12, md: 3 }}>
-                        <FormControl fullWidth sx={{ minWidth: 200 }}>
+
+                    {/* Project Type Filter - 3rd Position */}
+                    <Grid size={{ xs: 12, md: 1 }}>
+                        <FormControl fullWidth sx={{ minWidth: 100, maxWidth: 200 }}>
                             <InputLabel>Project Type</InputLabel>
                             <Select
                                 value={projectType}
                                 label="Project Type"
                                 onChange={(e) => setProjectType(e.target.value)}
                             >
-                                {PROJECT_TYPES.map(t => (
-                                    <MenuItem key={t} value={t}>{t}</MenuItem>
-                                ))}
+                                <MenuItem value="ALL">ALL</MenuItem>
+                                <MenuItem value="Tech">Tech</MenuItem>
+                                <MenuItem value="Integration">Integration</MenuItem>
+                                <MenuItem value="ICR">ICR</MenuItem>
+                                <MenuItem value="Project">Project</MenuItem>
                             </Select>
                         </FormControl>
                     </Grid>
-                    <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+
+                    <Grid size={{ xs: 12, md: 2 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                         <ToggleButtonGroup
                             value={viewMode}
                             exclusive

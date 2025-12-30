@@ -5,7 +5,7 @@ import logging
 from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import LarkModelTP, LarkModelTCG, TCGRemovedTickets
-from lark_service import list_records
+from services.lark_service import list_records
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -234,7 +234,7 @@ def sync_jira_verification():
     If a ticket returns 404 Not Found from Jira, it is deleted from the local DB.
     """
     logger.info("Starting Jira Verification Job...")
-    from jira_service import JiraService
+    from services.jira_service import JiraService
     
     jira_service = JiraService()
     if not jira_service.jira:

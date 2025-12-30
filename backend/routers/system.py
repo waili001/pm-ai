@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from database import engine, SessionLocal
-from lark_service import list_records
+from services.lark_service import list_records
 from pydantic import BaseModel
 from sqlalchemy import text, inspect
 

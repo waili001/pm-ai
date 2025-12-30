@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from database import SessionLocal
-from models import LarkModelTP, LarkModelTCG, LarkModelDept
+from models import LarkModelTP, LarkModelTCG, LarkModelDept, LarkModelProgram
+from typing import List, Optional
 
 router = APIRouter(
     prefix="/api/project",
@@ -40,16 +41,51 @@ def get_active_tps():
     finally:
         db.close()
 
+@router.get("/programs")
+def get_programs():
+    """Fetch all unique program titles."""
+    db = SessionLocal()
+    try:
+        # Fetch distinct program titles
+        programs = db.query(LarkModelProgram.program_title).distinct().filter(LarkModelProgram.program_title != None).all()
+        results = [p[0] for p in programs if p[0]]
+        return sorted(results)
+    finally:
+        db.close()
+
 @router.get("/planning")
-def get_planning_projects(department: str = None, project_type: str = None):
+def get_planning_projects(
+    program: Optional[str] = None,
+    department: Optional[str] = None,
+    project_type: Optional[str] = None
+):
     """
-    Fetch projects for Planning Dashboard with optional filtering.
-    - department: string to match (partial match vs exact match TBD, using ilike for now)
-    - project_type: exact match
+    Get projects for Planning Dashboard.
+    Filters: Program, Department, Project Type.
+    Logic: 
+      - Program: Filter by TP ticket numbers found in TP_PROGRAM for the given title.
+      - Department/Type: Direct filter.
+      - Closed projects: Hide if older than 4 months.
     """
     db = SessionLocal()
     try:
         query = db.query(LarkModelTP)
+
+        # 1. Program Filter (First Priority)
+        if program and program != "ALL":
+             # Find TPs associated with this program
+             # TP_PROGRAM.tp contains ticket number (e.g. TP-123)
+             program_tps = db.query(LarkModelProgram.tp).filter(LarkModelProgram.program_title == program).all()
+             
+             # Extract list of ticket numbers, filtering out None
+             tp_list = [p[0] for p in program_tps if p[0]]
+             
+             if not tp_list:
+                 # Program selected but no TPs found -> Return empty
+                 return []
+             
+             # Filter main query
+             query = query.filter(LarkModelTP.ticket_number.in_(tp_list))
 
         if department and department != "ALL":
              # department is stored as Comma separated string potentially
