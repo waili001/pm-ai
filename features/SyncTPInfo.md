@@ -9,6 +9,8 @@ The following fields are currently missing or need to be ensured they are synchr
 - **Description**: Detailed description of the TP.
 - **Project Manager**: The PM in charge of the TP.
 - **Due Day**: The due date for the TP.
+- **Start Date**: The start date of the project.
+- **SIT Date**: The SIT date of the project.
 
 ## Technical Requirements
 - Update Database Schema to include these columns.

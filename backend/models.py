@@ -9,8 +9,12 @@ class LarkModelTP(Base):
     
     # Specific Fields
     components = Column(Text) # List -> Comma separated string
-    current_completion = Column(Integer)
     department = Column(Text) # List -> Comma separated string
+    
+    # Analysis Fields
+    completed_percentage = Column(Integer) # Calculated field: Closed / Total Tickets * 100
+    
+    current_completion = Column(Integer)
     due_day_quarter = Column(String) # JSON -> value text
     icr_count = Column(Integer)
     jira_status = Column(String)
@@ -21,6 +25,8 @@ class LarkModelTP(Base):
     released_date = Column(String) # Lark Date (ms) or formatted
     description = Column(Text)
     due_day = Column(String)
+    start_date = Column(String)
+    sit_date = Column(String)
     
     source_id = Column(Text)
     ticket_number = Column(Text)

@@ -291,3 +291,65 @@ def sync_jira_verification():
         logger.error(f"Error in sync_jira_verification: {e}", exc_info=True)
     finally:
         db.close()
+
+def calculate_tp_completion(db: Session = None):
+    """
+    Calculates completion percentage for 'In Progress' TP Projects.
+    Formula: Count(Closed Tickets) / Count(Total Tickets) * 100
+    Updates 'completed_percentage' column in TP_Projects.
+    """
+    logger.info("Starting TP Completion Calculation Job...")
+    
+    # If db session is not provided, create a new one (for scheduler usage)
+    close_session = False
+    if db is None:
+        db = SessionLocal()
+        close_session = True
+        
+    try:
+        # 1. Get all In Progress TPs
+        # Note: Checking multiple potential status fields based on models.py
+        # jira_status seems to be the main status field for TPs usually, or 'status' if it existed.
+        # models.py has 'jira_status'. Requirement says "status 'In Progress'".
+        # I will assume jira_status is the one.
+        in_progress_tps = db.query(LarkModelTP).filter(LarkModelTP.jira_status == "In Progress").all()
+        logger.info(f"Found {len(in_progress_tps)} In Progress TPs to calculate.")
+        
+        updates_count = 0
+        
+        for tp in in_progress_tps:
+            tp_number = tp.ticket_number
+            if not tp_number:
+                continue
+                
+            # 2. Find linked TCG Tickets
+            # Assuming LarkModelTCG.tp_number links to LarkModelTP.ticket_number
+            tickets = db.query(LarkModelTCG).filter(LarkModelTCG.tp_number == tp_number).all()
+            
+            total_tickets = len(tickets)
+            if total_tickets == 0:
+                # No tickets, percentage is 0 (or keep as is? Requirement implies calculation)
+                # If no tickets, technically completion is 0% or N/A. Let's set to 0.
+                new_percentage = 0
+            else:
+                # 3. Count Closed Tickets
+                # Check status field. TCG has 'jira_status' too.
+                # Requirement: status 'Closed'
+                closed_tickets = [t for t in tickets if t.jira_status == "Closed"]
+                closed_count = len(closed_tickets)
+                
+                new_percentage = int((closed_count / total_tickets) * 100)
+            
+            # Update only if changed (optimization)
+            if tp.completed_percentage != new_percentage:
+                tp.completed_percentage = new_percentage
+                updates_count += 1
+                
+        db.commit()
+        logger.info(f"TP Completion Calculation Fininshed. Updated {updates_count} records.")
+        
+    except Exception as e:
+        logger.error(f"Error in calculate_tp_completion: {e}", exc_info=True)
+    finally:
+        if close_session:
+            db.close()

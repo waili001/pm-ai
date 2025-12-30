@@ -127,6 +127,9 @@ def get_planning_projects(
                 # New Fields
                 "released_date": tp.released_date,
                 "due_day": tp.due_day,
+                "start_date": tp.start_date,
+                "sit_date": tp.sit_date,
+                "completed_percentage": tp.completed_percentage or 0, # Default to 0
             })
         
         return results
@@ -192,6 +195,8 @@ def get_ticket_details(ticket_number: str):
                 "description": tp.description, 
                 "released_date": tp.released_date,
                 "due_day": tp.due_day,
+                "start_date": tp.start_date,
+                "sit_date": tp.sit_date,
                 "issue_type": "TP"
             }
             

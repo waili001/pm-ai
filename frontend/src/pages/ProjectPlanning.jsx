@@ -17,7 +17,8 @@ import {
     Autocomplete,
     TextField,
     Stack,
-    Link
+    Link,
+    LinearProgress
 } from '@mui/material';
 import {
     ViewKanban,
@@ -207,6 +208,24 @@ export default function ProjectPlanning() {
                                                     <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
                                                         {formatDueDay(project.due_day)}
                                                     </Typography>
+                                                </Box>
+                                            )}
+
+                                            {/* Completed Percentage */}
+                                            {typeof project.completed_percentage === 'number' && (
+                                                <Box sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <Box sx={{ width: '100%', mr: 1 }}>
+                                                        <LinearProgress
+                                                            variant="determinate"
+                                                            value={project.completed_percentage}
+                                                            sx={{ height: 6, borderRadius: 3 }}
+                                                        />
+                                                    </Box>
+                                                    <Box sx={{ minWidth: 35 }}>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {`${Math.round(project.completed_percentage)}%`}
+                                                        </Typography>
+                                                    </Box>
                                                 </Box>
                                             )}
 
