@@ -38,7 +38,7 @@ const MemberStatus = () => {
         setLoadingTicket(true);
         setSelectedTicket(null); // Clear previous
         try {
-            const response = await fetch(`http://localhost:8000/api/project/ticket/${ticketNumber}`);
+            const response = await fetch(`/api/project/ticket/${ticketNumber}`);
             if (response.ok) {
                 const data = await response.json();
                 setSelectedTicket(data);
@@ -62,7 +62,7 @@ const MemberStatus = () => {
         const fetchDepts = async () => {
             setLoadingDepts(true);
             try {
-                const response = await fetch('http://localhost:8000/api/members/departments');
+                const response = await fetch('/api/members/departments');
                 if (response.ok) {
                     const data = await response.json();
 
@@ -96,7 +96,7 @@ const MemberStatus = () => {
             setLoading(true);
             try {
                 // Encode dept name for URL
-                const response = await fetch(`http://localhost:8000/api/members/status?department=${encodeURIComponent(selectedDept)}`);
+                const response = await fetch(`/api/members/status?department=${encodeURIComponent(selectedDept)}`);
                 if (response.ok) {
                     const data = await response.json();
                     // Add unique ID for DataGrid

@@ -75,7 +75,7 @@ export default function ProjectBacklog() {
     // Fetch Active TPs on Mount
     useEffect(() => {
         setLoadingTPs(true);
-        fetch('http://127.0.0.1:8000/api/project/active')
+        fetch('/api/project/active')
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
@@ -107,7 +107,7 @@ export default function ProjectBacklog() {
             addToHistory(selectedTP);
 
             setLoadingTickets(true);
-            fetch(`http://127.0.0.1:8000/api/project/${selectedTP.ticket_number}/tcg_tickets`)
+            fetch(`/api/project/${selectedTP.ticket_number}/tcg_tickets`)
                 .then(res => res.json())
                 .then(data => {
                     if (Array.isArray(data)) {

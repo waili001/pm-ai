@@ -13,6 +13,7 @@ class LarkModelTP(Base):
     
     # Analysis Fields
     completed_percentage = Column(Integer) # Calculated field: Closed / Total Tickets * 100
+    sort_order = Column(Integer, default=0) # Kanban sort order
     
     current_completion = Column(Integer)
     due_day_quarter = Column(String) # JSON -> value text

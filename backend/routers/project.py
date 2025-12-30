@@ -2,6 +2,11 @@ from fastapi import APIRouter
 from database import SessionLocal
 from models import LarkModelTP, LarkModelTCG, LarkModelDept, LarkModelProgram
 from typing import List, Optional
+from pydantic import BaseModel
+
+class ReorderRequest(BaseModel):
+    project_ids: List[str]
+    status: str
 
 router = APIRouter(
     prefix="/api/project",
@@ -94,7 +99,7 @@ def get_planning_projects(
         if project_type and project_type != "ALL":
              query = query.filter(LarkModelTP.project_type == project_type)
 
-        tps = query.all()
+        tps = query.order_by(LarkModelTP.sort_order.asc()).all()
         
         # Logic: Filter out "Closed" projects older than 4 months
         # 4 months ~ 120 days
@@ -130,9 +135,31 @@ def get_planning_projects(
                 "start_date": tp.start_date,
                 "sit_date": tp.sit_date,
                 "completed_percentage": tp.completed_percentage or 0, # Default to 0
+                "sort_order": tp.sort_order or 0
             })
         
+        # Sort by sort_order explicitly (though SQL should handle it if added)
+        results.sort(key=lambda x: x["sort_order"])
+        
         return results
+    finally:
+        db.close()
+
+@router.post("/reorder")
+def reorder_projects(request: ReorderRequest):
+    """Reorder projects within a status column."""
+    db = SessionLocal()
+    try:
+        # Iterate through the list of IDs and update their sort_order
+        for index, project_id in enumerate(request.project_ids):
+            tp = db.query(LarkModelTP).filter(LarkModelTP.record_id == project_id).first()
+            if tp:
+                tp.sort_order = index
+        db.commit()
+        return {"status": "success"}
+    except Exception as e:
+        db.rollback()
+        raise e
     finally:
         db.close()
 

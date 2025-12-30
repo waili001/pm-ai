@@ -165,13 +165,41 @@
                                                     "sit_date": { "type": "string" },
                                                     "issue_type": { "type": "string", "example": "TP" },
                                                     "icr_count": { "type": "integer" },
-                                                    "completed_percentage": { "type": "integer", "example": 85 }
+                                                    "completed_percentage": { "type": "integer", "example": 85 },
+                                                    "sort_order": { "type": "integer", "example": 1 }
                                                 }
                                             }
                                         }
                                     }
                                 },
                                 "404": { "description": "Ticket not found" }
+                            }
+                        }
+                    },
+                    "/api/project/reorder": {
+                        "post": {
+                            "tags": ["project"],
+                            "summary": "Reorder projects",
+                            "description": "Update sort_order for a list of projects within a status.",
+                            "requestBody": {
+                                "required": true,
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": { "type": "string" },
+                                                "project_ids": {
+                                                    "type": "array",
+                                                    "items": { "type": "string" }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "responses": {
+                                "200": { "description": "Success" }
                             }
                         }
                     }

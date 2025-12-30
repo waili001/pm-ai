@@ -29,7 +29,7 @@ export default function SqliteAdmin() {
     });
 
     useEffect(() => {
-        fetch('http://127.0.0.1:8000/api/db/tables')
+        fetch('/api/db/tables')
             .then(res => res.json())
             .then(data => setTables(data.tables || []))
             .catch(err => console.error("Failed to load tables", err));
@@ -45,7 +45,7 @@ export default function SqliteAdmin() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/db/query', {
+            const response = await fetch('/api/db/query', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -181,7 +181,7 @@ export default function SqliteAdmin() {
                         const fetchPage = async () => {
                             setLoading(true);
                             try {
-                                const response = await fetch('http://127.0.0.1:8000/api/db/query', {
+                                const response = await fetch('/api/db/query', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({

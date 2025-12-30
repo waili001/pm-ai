@@ -20,7 +20,7 @@ export default function JobConfig() {
         setLoadingVerify(true);
         setMessage(null);
         try {
-            const res = await fetch('http://127.0.0.1:8000/api/jobs/verify-jira', {
+            const res = await fetch('/api/jobs/verify-jira', {
                 method: 'POST',
             });
             const data = await res.json();
@@ -41,7 +41,7 @@ export default function JobConfig() {
         setLoadingDept(true);
         setMessage(null);
         try {
-            const res = await fetch('http://127.0.0.1:8000/api/sync/lark/dept', {
+            const res = await fetch('/api/sync/lark/dept', {
                 method: 'POST',
             });
             const data = await res.json();
@@ -62,7 +62,7 @@ export default function JobConfig() {
         setLoadingSync(true);
         setMessage(null);
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/jobs/sync', {
+            const response = await fetch('/api/jobs/sync', {
                 method: 'POST',
             });
 

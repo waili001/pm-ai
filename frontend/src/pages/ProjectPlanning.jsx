@@ -29,6 +29,7 @@ import {
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import Xrange from 'highcharts/modules/xrange';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 // Helper to format due day
 const formatDueDay = (val) => {
@@ -83,7 +84,7 @@ export default function ProjectPlanning() {
     // Fetch filters options on mount
     useEffect(() => {
         // Fetch Departments
-        fetch('http://127.0.0.1:8000/api/project/departments')
+        fetch('/api/project/departments')
             .then(res => res.json())
             .then(data => {
                 setDepartmentsList(["ALL", ...data]);
@@ -91,7 +92,7 @@ export default function ProjectPlanning() {
             .catch(err => console.error("Error fetching departments:", err));
 
         // Fetch Programs
-        fetch('http://127.0.0.1:8000/api/project/programs')
+        fetch('/api/project/programs')
             .then(res => res.json())
             .then(data => {
                 setProgramsList(["ALL", ...data]);
@@ -120,7 +121,7 @@ export default function ProjectPlanning() {
         if (department && department !== "ALL") params.append("department", department);
         if (projectType && projectType !== "ALL") params.append("project_type", projectType);
 
-        fetch(`http://127.0.0.1:8000/api/project/planning?${params.toString()}`)
+        fetch(`/api/project/planning?${params.toString()}`)
             .then(res => res.json())
             .then(data => {
                 setProjects(data);
@@ -163,91 +164,178 @@ export default function ProjectPlanning() {
             return groups;
         }, [projects]);
 
+        const onDragEnd = async (result) => {
+            const { source, destination, draggableId } = result;
+
+            // Dropped outside or no change
+            if (!destination) return;
+            if (
+                source.droppableId === destination.droppableId &&
+                source.index === destination.index
+            ) {
+                return;
+            }
+
+            // Only allow same column reordering for now as per requirement
+            if (source.droppableId !== destination.droppableId) {
+                return;
+            }
+
+            const status = source.droppableId;
+            const items = Array.from(grouped[status] || []);
+            const [reorderedItem] = items.splice(source.index, 1);
+            items.splice(destination.index, 0, reorderedItem);
+
+            // Optimistic update
+            const newOrderIds = items.map(p => p.id);
+
+            // Update sort_order on the reordered items for consistency
+            const reorderedItemsWithSort = items.map((p, idx) => ({
+                ...p,
+                sort_order: idx
+            }));
+
+            // Filter out the items that are part of the current reordered group using ID check
+            // Use Set for O(1) lookups if list is large, but array includes is fine here
+            const otherProjects = projects.filter(p => !newOrderIds.includes(p.id));
+
+            // Combine others + reordered items
+            // Note: This changes the global order of 'projects', putting modified status at the end.
+            // But since 'grouped' iterates 'projects' to fill buckets, and buckets are rendered independently,
+            // the relative order within the bucket is what matters. This guarantees it.
+            const newProjects = [...otherProjects, ...reorderedItemsWithSort];
+
+            setProjects(newProjects);
+
+            // Call API in background
+            fetch('/api/project/reorder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    status: status,
+                    project_ids: newOrderIds
+                })
+            }).catch(error => {
+                console.error("Failed to reorder:", error);
+                // Optionally revert state here if needed
+            });
+        };
+
         return (
-            <Box sx={{ overflowX: 'auto', pb: 2 }}>
-                <Stack direction="row" spacing={2} sx={{ minWidth: 'fit-content', height: '100%' }}>
-                    {KANBAN_COLUMNS.map(col => (
-                        <Paper key={col} sx={{ width: 300, minWidth: 300, bgcolor: '#f5f5f5', display: 'flex', flexDirection: 'column' }}>
-                            <Box sx={{ p: 2, borderBottom: '1px solid #ddd', bgcolor: '#e0e0e0' }}>
-                                <Typography variant="subtitle1" fontWeight="bold">
-                                    {col} ({grouped[col]?.length || 0})
-                                </Typography>
-                            </Box>
-                            <Box sx={{ p: 1, overflowY: 'auto', flexGrow: 1 }}>
-                                {grouped[col]?.map(project => (
-                                    <Card key={project.id} sx={{ mb: 1 }}>
-                                        <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
-                                                <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 'bold', zIndex: 10, position: 'relative' }}>
-                                                    <Link
-                                                        href={`https://jira.tc-gaming.co/jira/browse/${project.ticket_number}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                        underline="hover"
-                                                        color="inherit"
-                                                    >
-                                                        {project.ticket_number}
-                                                    </Link>
-                                                </Typography>
-                                                {/* Assuming project_type as issue type equivalent for now */}
-                                                <Chip
-                                                    label={project.project_type || "Project"}
-                                                    size="small"
-                                                    color="secondary"
-                                                    sx={{ fontSize: '0.65rem', height: 18 }}
-                                                />
-                                            </Box>
-                                            <Typography variant="body2" sx={{ mb: 1, lineHeight: 1.3 }}>
-                                                {project.title}
+            <DragDropContext onDragEnd={onDragEnd}>
+                <Box sx={{ overflowX: 'auto', pb: 2 }}>
+                    <Stack direction="row" spacing={2} sx={{ minWidth: 'fit-content', height: '100%' }}>
+                        {KANBAN_COLUMNS.map(col => (
+                            <Droppable key={col} droppableId={col}>
+                                {(provided) => (
+                                    <Paper
+                                        ref={provided.innerRef}
+                                        {...provided.droppableProps}
+                                        sx={{ width: 300, minWidth: 300, bgcolor: '#f5f5f5', display: 'flex', flexDirection: 'column' }}
+                                    >
+                                        <Box sx={{ p: 2, borderBottom: '1px solid #ddd', bgcolor: '#e0e0e0' }}>
+                                            <Typography variant="subtitle1" fontWeight="bold">
+                                                {col} ({grouped[col]?.length || 0})
                                             </Typography>
-                                            {/* Due Day */}
-                                            {project.due_day && (
-                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, color: 'text.secondary' }}>
-                                                    <EventIcon sx={{ fontSize: 14, mr: 0.5 }} />
-                                                    <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
-                                                        {formatDueDay(project.due_day)}
-                                                    </Typography>
-                                                </Box>
-                                            )}
+                                        </Box>
+                                        <Box sx={{ p: 1, overflowY: 'auto', flexGrow: 1 }}>
+                                            {grouped[col]?.map((project, index) => (
+                                                <Draggable key={project.id} draggableId={project.id.toString()} index={index}>
+                                                    {(provided, snapshot) => (
+                                                        <Card
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}
+                                                            sx={{
+                                                                mb: 1,
+                                                                // Highlight styles when dragging
+                                                                backgroundColor: snapshot.isDragging ? '#e3f2fd' : 'background.paper',
+                                                                border: snapshot.isDragging ? '2px solid #2196f3' : 'none',
+                                                                boxShadow: snapshot.isDragging ? 6 : 1,
+                                                                transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
+                                                                ...provided.draggableProps.style
+                                                            }}
+                                                        >
+                                                            <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                                                                {/* ... Content ... */}
+                                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
+                                                                    <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 'bold', zIndex: 10, position: 'relative' }}>
+                                                                        <Link
+                                                                            href={`https://jira.tc-gaming.co/jira/browse/${project.ticket_number}`}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                            underline="hover"
+                                                                            color="inherit"
+                                                                        >
+                                                                            {project.ticket_number}
+                                                                        </Link>
+                                                                    </Typography>
+                                                                    {/* Assuming project_type as issue type equivalent for now */}
+                                                                    <Chip
+                                                                        label={project.project_type || "Project"}
+                                                                        size="small"
+                                                                        color="secondary"
+                                                                        sx={{ fontSize: '0.65rem', height: 18 }}
+                                                                    />
+                                                                </Box>
+                                                                <Typography variant="body2" sx={{ mb: 1, lineHeight: 1.3 }}>
+                                                                    {project.title}
+                                                                </Typography>
 
-                                            {/* Completed Percentage */}
-                                            {typeof project.completed_percentage === 'number' && (
-                                                <Box sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                    <Box sx={{ width: '100%', mr: 1 }}>
-                                                        <LinearProgress
-                                                            variant="determinate"
-                                                            value={project.completed_percentage}
-                                                            sx={{ height: 6, borderRadius: 3 }}
-                                                        />
-                                                    </Box>
-                                                    <Box sx={{ minWidth: 35 }}>
-                                                        <Typography variant="caption" color="text.secondary">
-                                                            {`${Math.round(project.completed_percentage)}%`}
-                                                        </Typography>
-                                                    </Box>
-                                                </Box>
-                                            )}
+                                                                {/* Due Day */}
+                                                                {project.due_day && (
+                                                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, color: 'text.secondary' }}>
+                                                                        <EventIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                                                                        <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>
+                                                                            {formatDueDay(project.due_day)}
+                                                                        </Typography>
+                                                                    </Box>
+                                                                )}
 
-                                            <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                                <Chip
-                                                    label={project.project_manager || "No PM"}
-                                                    size="small"
-                                                    variant="outlined"
-                                                    sx={{ fontSize: '0.7rem', height: 20 }}
-                                                />
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {project.department}
-                                                </Typography>
-                                            </Stack>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </Box>
-                        </Paper>
-                    ))}
-                </Stack>
-            </Box>
+                                                                {/* Completed Percentage */}
+                                                                {typeof project.completed_percentage === 'number' && (
+                                                                    <Box sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                                        <Box sx={{ width: '100%', mr: 1 }}>
+                                                                            <LinearProgress
+                                                                                variant="determinate"
+                                                                                value={project.completed_percentage}
+                                                                                sx={{ height: 6, borderRadius: 3 }}
+                                                                            />
+                                                                        </Box>
+                                                                        <Box sx={{ minWidth: 35 }}>
+                                                                            <Typography variant="caption" color="text.secondary">
+                                                                                {`${Math.round(project.completed_percentage)}%`}
+                                                                            </Typography>
+                                                                        </Box>
+                                                                    </Box>
+                                                                )}
+
+                                                                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                                                    <Chip
+                                                                        label={project.project_manager || "No PM"}
+                                                                        size="small"
+                                                                        variant="outlined"
+                                                                        sx={{ fontSize: '0.7rem', height: 20 }}
+                                                                    />
+                                                                    <Typography variant="caption" color="text.secondary">
+                                                                        {project.department}
+                                                                    </Typography>
+                                                                </Stack>
+                                                            </CardContent>
+                                                        </Card>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </Box>
+                                    </Paper>
+                                )}
+                            </Droppable>
+                        ))}
+                    </Stack>
+                </Box>
+            </DragDropContext>
         );
     };
 
