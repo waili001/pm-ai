@@ -35,3 +35,12 @@ debug 目錄 放 test/debug 的檔案
 verify 目錄放 test/verify 的檔案
 service 目錄 放 service 的檔案
 
+
+### [2025-12-31] Prevention Rules
+1. **Log Before Fix (先記錄再修復)**:
+   - When debugging API failures, you MUST log the **Request Payload** and **Raw Response Body** before attempting any code fix.
+   - Do not guess parameter names; verify them against the raw response.
+
+2. **Null Safety in Data Sync (數據同步的空值安全)**:
+   - When syncing data from external APIs (Lark/Bitfinex) to DB, explicitly handle `None`/`null` values.
+   - Do not assume a field always exists. Use `.get('field', default)` or explicitly check for existence.

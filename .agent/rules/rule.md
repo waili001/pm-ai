@@ -9,5 +9,11 @@ General
 
 API Document
 - 以 open api 的標準 產生 api 的文件
-- api 的文件產生在 features/api.html
-- 總是將實作的需求, 若有新的 api 或修改舊的api 得內容同步到 features/api.html 的文件中
+- api 的文件產生在 docs/api.html
+- 總是將實作的需求, 若有新的 api 或修改舊的api 得內容同步到 docs/api.html 的文件中
+
+Feature Document
+- 每實作完一個功能與需求，就將 該功能與需求寫到的 docs/features/xxxx.md. 
+
+
+
