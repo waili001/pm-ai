@@ -13,7 +13,7 @@
 ### View Logic
 *   **Kanban View (看板檢視)**：
     *   根據 TP 的狀態顯示每一個 Column。
-    *   **排序順序**：`Open` > `In Review` > `Action Needed` > `In Progress` > `Resolved` > `Closed`
+    *   **排序順序**：`Open` > `In Review` > `Action Needed` > `In Progress` > `Resolved` > `Closed` (所有狀態欄位皆固定顯示，即使該狀態下無專案)
     *   **卡片內容**：
         *   基本資訊：標題、Ticket Link、PM、部門。
         *   **完成度 (Completed Percentage)**：顯示進度條與百分比 (Closed Tickets / Total Tickets)。

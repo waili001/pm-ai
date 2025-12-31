@@ -176,7 +176,7 @@ export default function ProjectBacklog() {
     // Determine Columns: predefined order first, then others
     const avaliableStatuses = Object.keys(groupedTickets);
     const kanbanColumns = [
-        ...STATUS_ORDER.filter(s => avaliableStatuses.includes(s)),
+        ...STATUS_ORDER,
         ...avaliableStatuses.filter(s => !STATUS_ORDER.includes(s)).sort()
     ];
 

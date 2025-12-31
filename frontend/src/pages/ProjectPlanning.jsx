@@ -424,7 +424,7 @@ export default function ProjectPlanning() {
         const options = {
             chart: {
                 type: 'xrange',
-                height: Math.max(400, ganttData.length * 50 + 100)
+                height: Math.max(400, ganttData.length * 70 + 100) // Increased row height
             },
             title: { text: null },
             xAxis: {
@@ -441,14 +441,19 @@ export default function ProjectPlanning() {
             yAxis: {
                 title: { text: '' },
                 categories: ganttData.map(d => d.ticket),
-                reversed: true
+                reversed: true,
+                labels: {
+                    style: {
+                        fontSize: '12px' // Increased axis label size
+                    }
+                }
             },
             series: [{
                 name: 'Projects',
                 pointPadding: 0,
                 groupPadding: 0,
                 borderColor: 'gray',
-                pointWidth: 20,
+                pointWidth: 26, // Increased bar width (20 -> 35)
                 data: ganttData,
                 dataLabels: {
                     enabled: true,
@@ -456,9 +461,10 @@ export default function ProjectPlanning() {
                         return this.point.name;
                     },
                     style: {
-                        fontSize: '10px',
-                        fontWeight: 'normal',
-                        textOutline: 'none'
+                        fontSize: '12px', // Increased font size (10 -> 14)
+                        fontWeight: 'bold', // Bolder text
+                        color: 'white', // High contrast
+                        textOutline: '1px black' // Outline for readability
                     }
                 }
             }],
