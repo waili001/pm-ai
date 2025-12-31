@@ -6,7 +6,7 @@ Product Backlog 是一個看板 (Kanban) 介面，用於管理 TCG Tickets。使
 ## View Logic
 *   **Kanban View**：
     *   顯示 TCG Tickets，依狀態分欄顯示。
-    *   **固定欄位**：不管該狀態下是否有 Ticket，狀態欄位皆需保留顯示 (Open, To Do, In Progress, In Review, Resolved, Scheduled, Closed)。
+    *   **固定欄位**：不管該狀態下是否有 Ticket，狀態欄位皆需保留顯示 (Open, To Do, In Progress, Resolved, Scheduled, Closed)。
     *   **Drag-and-Drop (拖拉排序)**：
         *   允許使用者在 **同一狀態欄位 (Column)** 內上下拖曳卡片以調整優先順序。
         *   排序結果會儲存至資料庫 (`TCG_Tickets` Table 的 `sort_order` 欄位)。

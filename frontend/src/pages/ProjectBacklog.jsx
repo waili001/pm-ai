@@ -27,7 +27,7 @@ import { parseJiraMarkup } from '../utils/jiraMarkup';
 import { JiraMarkupRenderer } from '../utils/JiraMarkupRenderer';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
-const STATUS_ORDER = ["Open", "To Do", "In Progress", "In Review", "Resolved", "Scheduled", "Closed"];
+const STATUS_ORDER = ["Open", "To Do", "In Progress", "Resolved", "Scheduled", "Closed"]; // Removed In Review
 
 const STORAGE_KEY = 'project_backlog_last_selected';
 const HISTORY_STORAGE_KEY = 'project_backlog_recent_history';
