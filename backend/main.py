@@ -86,6 +86,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# Trust Proxy Headers (for HTTPS on Railway)
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+
 # Allow CORS for local development
 origins = [
     "http://localhost:5173",
