@@ -12,7 +12,12 @@ import {
     ListItemButton,
     ListItemIcon,
     ListItemText,
-    Collapse
+    Collapse,
+    Avatar,
+    Menu,
+    MenuItem,
+    IconButton,
+    Tooltip
 } from '@mui/material';
 import {
     Menu as MenuIcon,
@@ -34,8 +39,26 @@ export default function Layout() {
     const location = useLocation();
     const [adminOpen, setAdminOpen] = useState(true);
 
+    const [anchorElUser, setAnchorElUser] = useState(null);
+    const username = localStorage.getItem('username') || 'User';
+
     const handleAdminClick = () => {
         setAdminOpen(!adminOpen);
+    };
+
+    const handleOpenUserMenu = (event) => {
+        setAnchorElUser(event.currentTarget);
+    };
+
+    const handleCloseUserMenu = () => {
+        setAnchorElUser(null);
+    };
+
+    const handleLogout = () => {
+        handleCloseUserMenu();
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('username');
+        navigate('/login');
     };
 
     return (
@@ -46,6 +69,41 @@ export default function Layout() {
                     <Typography variant="h6" noWrap component="div">
                         TCG Projects Dashboard
                     </Typography>
+
+                    <Box sx={{ flexGrow: 1 }} />
+
+                    <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Tooltip title="Open settings">
+                            <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                                <Avatar alt={username} src="/static/images/avatar/2.jpg">
+                                    {username.charAt(0).toUpperCase()}
+                                </Avatar>
+                            </IconButton>
+                        </Tooltip>
+                        <Typography variant="subtitle1" component="div" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                            {username}
+                        </Typography>
+                        <Menu
+                            sx={{ mt: '45px' }}
+                            id="menu-appbar"
+                            anchorEl={anchorElUser}
+                            anchorOrigin={{
+                                vertical: 'top',
+                                horizontal: 'right',
+                            }}
+                            keepMounted
+                            transformOrigin={{
+                                vertical: 'top',
+                                horizontal: 'right',
+                            }}
+                            open={Boolean(anchorElUser)}
+                            onClose={handleCloseUserMenu}
+                        >
+                            <MenuItem onClick={handleLogout}>
+                                <Typography textAlign="center">Logout</Typography>
+                            </MenuItem>
+                        </Menu>
+                    </Box>
                 </Toolbar>
             </AppBar>
             <Drawer
