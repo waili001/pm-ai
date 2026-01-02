@@ -95,13 +95,27 @@ def lark_login(request: Request):
     
     # Dynamic Redirect URI based on current request
     # Ensure scheme is https if behind weird proxies without proper headers, but usually request.url_for handles it if configured right
-    redirect_uri = str(request.url_for('lark_callback'))
     
-    # FORCE HTTPS: If not localhost, ensure the redirect_uri uses https.
-    # This is a fallback in case middleware or proxy headers are missing.
-    if "localhost" not in redirect_uri and "127.0.0.1" not in redirect_uri:
-        if redirect_uri.startswith("http://"):
-            redirect_uri = redirect_uri.replace("http://", "https://", 1)
+    # Dynamic Redirect URI based on current request
+    req_url = str(request.url)
+    logger.info(f"Lark Login Reqeust URL: {req_url}")
+    
+    # Strategy: Use LARK_REDIRECT_URI env var if available (Simplest & Best for Prod)
+    LARK_REDIRECT_URI = os.getenv("LARK_REDIRECT_URI")
+    
+    if LARK_REDIRECT_URI:
+        # Use provided full URI directly
+        redirect_uri = LARK_REDIRECT_URI
+        logger.info(f"Using LARK_REDIRECT_URI env: {redirect_uri}")
+    elif "localhost" not in req_url and "127.0.0.1" not in req_url:
+        # Fallback: Guess production based on Request Host if not localhost
+        host = request.headers.get("host") or request.url.netloc
+        redirect_uri = f"https://{host}/api/auth/lark/callback"
+        logger.info(f"Guessed Production HTTPS Redirect URI: {redirect_uri}")
+    else:
+        # Localhost development
+        redirect_uri = str(request.url_for('lark_callback'))
+        logger.info(f"Using Localhost Redirect URI: {redirect_uri}")
             
     auth_url = f"{LARK_DOMAIN}/open-apis/authen/v1/authorize?app_id={LARK_APP_ID}&redirect_uri={redirect_uri}&state=RANDOM_STATE"
     return RedirectResponse(auth_url)
@@ -110,7 +124,18 @@ def lark_login(request: Request):
 @router.get("/auth/lark/callback", name="lark_callback")
 def lark_callback(request: Request, code: str, state: str = None, gap: str = None,  db: Session = Depends(get_db)):
     # Reconstruct the redirect_uri used in login
-    redirect_uri = str(request.url_for('lark_callback'))
+    
+    # Strategy: Use LARK_REDIRECT_URI env var if available
+    LARK_REDIRECT_URI = os.getenv("LARK_REDIRECT_URI")
+    req_url = str(request.url)
+    
+    if LARK_REDIRECT_URI:
+        redirect_uri = LARK_REDIRECT_URI
+    elif "localhost" not in req_url and "127.0.0.1" not in req_url:
+        host = request.headers.get("host") or request.url.netloc
+        redirect_uri = f"https://{host}/api/auth/lark/callback"
+    else:
+        redirect_uri = str(request.url_for('lark_callback'))
 
     # 1. Get Tenant Access Token
     tenant_access_token = get_tenant_access_token()
