@@ -96,9 +96,13 @@ def lark_login(request: Request):
     # Dynamic Redirect URI based on current request
     # Ensure scheme is https if behind weird proxies without proper headers, but usually request.url_for handles it if configured right
     redirect_uri = str(request.url_for('lark_callback'))
-    # For localhost development, sometimes it might be http, Lark requires https usually but localhost is exception
-    # Use request.base_url to get scheme/host/port
     
+    # FORCE HTTPS: If not localhost, ensure the redirect_uri uses https.
+    # This is a fallback in case middleware or proxy headers are missing.
+    if "localhost" not in redirect_uri and "127.0.0.1" not in redirect_uri:
+        if redirect_uri.startswith("http://"):
+            redirect_uri = redirect_uri.replace("http://", "https://", 1)
+            
     auth_url = f"{LARK_DOMAIN}/open-apis/authen/v1/authorize?app_id={LARK_APP_ID}&redirect_uri={redirect_uri}&state=RANDOM_STATE"
     return RedirectResponse(auth_url)
 
