@@ -3,7 +3,11 @@ import sqlite3
 import os
 
 # Database path (relative to backend dir)
-DB_PATH = "sql_app.db"
+DB_DIR = os.getenv("DB_DIR")
+if DB_DIR:
+    DB_PATH = os.path.join(DB_DIR, "sql_app.db")
+else:
+    DB_PATH = "sql_app.db"
 
 def migrate():
     print(f"Migrating database: {DB_PATH}")

@@ -2,11 +2,15 @@ import sqlite3
 import os
 
 # Define the database path (adjust if running from different location)
-# Assuming running from project root
-DB_PATH = "backend/sql_app.db"
-# Fallback if running inside backend dir
-if not os.path.exists(DB_PATH) and os.path.exists("sql_app.db"):
-    DB_PATH = "sql_app.db"
+DB_DIR = os.getenv("DB_DIR")
+if DB_DIR:
+    DB_PATH = os.path.join(DB_DIR, "sql_app.db")
+else:
+    # Assuming running from project root
+    DB_PATH = "backend/sql_app.db"
+    # Fallback if running inside backend dir
+    if not os.path.exists(DB_PATH) and os.path.exists("sql_app.db"):
+        DB_PATH = "sql_app.db"
 
 if not os.path.exists(DB_PATH):
     print(f"Database not found at {DB_PATH}. Skipping migration.")

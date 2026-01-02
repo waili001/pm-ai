@@ -1,9 +1,13 @@
 import sqlite3
 import os
 
-DB_PATH = "backend/sql_app.db"
-if not os.path.exists(DB_PATH) and os.path.exists("sql_app.db"):
-    DB_PATH = "sql_app.db"
+DB_DIR = os.getenv("DB_DIR")
+if DB_DIR:
+    DB_PATH = os.path.join(DB_DIR, "sql_app.db")
+else:
+    DB_PATH = "backend/sql_app.db"
+    if not os.path.exists(DB_PATH) and os.path.exists("sql_app.db"):
+        DB_PATH = "sql_app.db"
 
 conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
