@@ -1,8 +1,15 @@
 from dotenv import load_dotenv
 import os
 import logging
-from jobs import sync_lark_table
-from models import LarkModelTP
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Add parent dir to path if needed, but since it's in backend, appending current dir is usually enough if running from backend root?
+# Actually better to rely on absolute imports if possible or same sys.path hack
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from backend.features.sync.service.sync_service import sync_lark_table
+from backend.features.project.persistence.models import LarkModelTP
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

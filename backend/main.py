@@ -1,34 +1,36 @@
+import sys
+import os
+# Add parent directory to path to allow importing 'backend' package
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from fastapi import FastAPI
+
 from fastapi import BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 from contextlib import asynccontextmanager
-from database import engine, Base
+from backend.shared.database import engine, Base
 import logging
 import os
 
 # Import Routers
-from routers import project, jobs, system, member, auth
-
-# Import needed for sync jobs in lifespan
-from jobs import sync_lark_table
-from models import LarkModelTP, LarkModelTCG, LarkModelMember, LarkModelProgram
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from fastapi import Depends
-from dependencies import get_current_user
 
-# Configure logging
+# Import needed for sync jobs in lifespan
+# Import needed for sync jobs in lifespan
+from backend.features.sync.service.sync_service import sync_lark_table, calculate_tp_completion
+# Ensure all models are imported for Base.metadata.create_all
+from backend.features.project.persistence.models import LarkModelTP, LarkModelTCG, LarkModelProgram
+from backend.features.member.persistence.models import LarkModelMember
+from backend.features.auth.persistence.models import AdminUser
+from backend.features.system.persistence.models import LarkModelDept
+
+# Logging Config
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-       logging.StreamHandler(),
-        logging.FileHandler('backend.log')
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-# Suppress Lark SDK debug logs
-logging.getLogger("Lark").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # Initialize DB
@@ -73,7 +75,6 @@ async def lifespan(app: FastAPI):
     from datetime import datetime
     scheduler.add_job(run_sync_jobs, 'date', run_date=datetime.now())
     
-    from jobs import calculate_tp_completion
     scheduler.add_job(calculate_tp_completion, 'date', run_date=datetime.now())
     scheduler.add_job(calculate_tp_completion, 'interval', hours=1)
     
@@ -105,13 +106,8 @@ app.add_middleware(
 )
 
 # Include Routers
-# Include Routers
-# Include Routers
-app.include_router(project.router, dependencies=[Depends(get_current_user)])
-app.include_router(jobs.router, dependencies=[Depends(get_current_user)])
-app.include_router(system.router, dependencies=[Depends(get_current_user)])
-app.include_router(member.router, dependencies=[Depends(get_current_user)])
-app.include_router(auth.router)
+from backend.shared.controller.routing import register_routes
+register_routes(app)
 
 # Mount Static Files (Production Mode)
 if os.path.isdir("static"):

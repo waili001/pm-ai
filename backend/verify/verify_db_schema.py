@@ -4,9 +4,10 @@ import os
 from sqlalchemy import create_engine, inspect
 
 # Add backend to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+# Add project root to path
+sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
-from database import SQLALCHEMY_DATABASE_URL as DATABASE_URL
+from backend.shared.database import SQLALCHEMY_DATABASE_URL as DATABASE_URL
 
 def verify_schema():
     print(f"Connecting to database: {DATABASE_URL}")

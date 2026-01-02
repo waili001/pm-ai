@@ -7,11 +7,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 # Add backend to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+# Add project root to path
+sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
-from models import LarkModelTP, LarkModelTCG
-from database import SQLALCHEMY_DATABASE_URL
-from jobs import calculate_tp_completion
+from backend.features.project.persistence.models import LarkModelTP, LarkModelTCG
+from backend.shared.database import SQLALCHEMY_DATABASE_URL
+from backend.features.sync.service.sync_service import calculate_tp_completion
 
 def verify_logic():
     print("Setting up verification environment...")
