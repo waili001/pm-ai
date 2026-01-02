@@ -213,5 +213,21 @@ def lark_callback(request: Request, code: str, state: str = None, gap: str = Non
     access_token = create_access_token(data={"sub": user.username, "role": user.role})
     
     # Redirect to Frontend
-    frontend_url = "http://localhost:5173/login?token=" + access_token # Hardcoded localhost assumption mentioned in rules to be careful about, but per strict rules usually allow localhost dev. Ideally dynamic too but frontend port differs.
+    # Strategy: 
+    # 1. Use FRONTEND_URL env var if set (Manual Override)
+    # 2. If Localhost, default to http://localhost:5173 (Vite Dev Server)
+    # 3. If Production (Same Domain), derive from Request Host
+    
+    env_frontend = os.getenv("FRONTEND_URL")
+    if env_frontend:
+         base_url = env_frontend.rstrip("/")
+    elif "localhost" in str(request.url) or "127.0.0.1" in str(request.url):
+         base_url = "http://localhost:5173"
+    else:
+         # Production: Use the same host as the backend (served together)
+         # Force HTTPS for safety in Prod
+         host = request.headers.get("host") or request.url.netloc
+         base_url = f"https://{host}"
+         
+    frontend_url = f"{base_url}/login?token={access_token}"
     return RedirectResponse(frontend_url)
