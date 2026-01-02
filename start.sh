@@ -44,6 +44,10 @@ if [ -d "venv" ]; then
         set +a
     fi
 
+    # Run Database Migration (Rename Tables)
+    echo "Running Database Migration..."
+    python scripts/rename_legacy_tables.py
+    
     # Run in background with log redirection
     nohup uvicorn main:app --host 0.0.0.0 --port $BACKEND_PORT > ../backend.log 2>&1 &
     echo "Backend started (PID: $!). Logs: backend.log"

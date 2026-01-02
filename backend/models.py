@@ -7,7 +7,7 @@ class AuthProvider(str, enum.Enum):
     LARK = "LARK"
 
 class AdminUser(Base):
-    __tablename__ = "AdminUser"
+    __tablename__ = "admin_user"
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
@@ -25,7 +25,7 @@ class AdminUser(Base):
 
 
 class LarkModelTP(Base):
-    __tablename__ = "TP_Projects"
+    __tablename__ = "tp_projects"
     
     record_id = Column(String, primary_key=True, index=True)
     updated_at = Column(BigInteger) # Internal sync tracking
@@ -58,7 +58,7 @@ class LarkModelTP(Base):
 
 
 class LarkModelTCG(Base):
-    __tablename__ = "TCG_Tickets"
+    __tablename__ = "tcg_tickets"
 
     record_id = Column(String, primary_key=True, index=True)
     sort_order = Column(Integer, default=0) # Kanban sort order
@@ -107,14 +107,14 @@ class LarkModelTCG(Base):
 
 
 class TCGRemovedTickets(Base):
-    __tablename__ = "TCG_REMOVED_TICKETS"
+    __tablename__ = "tcg_removed_tickets"
 
     ticket_number = Column(String, primary_key=True, index=True)
     deleted_at = Column(BigInteger)  # Timestamp of deletion
 
 
 class LarkModelDept(Base):
-    __tablename__ = "TCG_DEPT"
+    __tablename__ = "tcg_dept"
 
     record_id = Column(String, primary_key=True, index=True)
     updated_at = Column(BigInteger)
@@ -128,7 +128,7 @@ class LarkModelDept(Base):
 
 
 class LarkModelMember(Base):
-    __tablename__ = 'MEMBER_INFO'
+    __tablename__ = "member_info"
     
     record_id = Column(String, primary_key=True)
     updated_at = Column(BigInteger)
@@ -152,7 +152,7 @@ class LarkModelMember(Base):
 
 
 class LarkModelProgram(Base):
-    __tablename__ = "TP_PROGRAM"
+    __tablename__ = "tp_program"
     
     record_id = Column(String, primary_key=True, index=True)
     updated_at = Column(BigInteger)
