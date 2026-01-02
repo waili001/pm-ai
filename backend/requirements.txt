@@ -6,3 +6,6 @@ sqlalchemy
 APScheduler
 jira
 aiofiles
+PyJWT
+passlib[bcrypt]
+requests
