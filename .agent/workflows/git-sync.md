@@ -2,6 +2,16 @@
 description: Automated Git Commit and Push
 ---
 
+---
+description: Your Workflow Description
+---
+> [!CAUTION]
+> **STRICT RULE**: This workflow is **FORBIDDEN** from using the `rm` command or any file deletion operations.
+> If a step requires cleanup, you must STOP and ask the user for manual intervention.
+
+
+// turbo-all
+
 1. Check current git status
    // turbo
    > run_command git status
