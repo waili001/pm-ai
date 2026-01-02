@@ -43,6 +43,27 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
     return encoded_jwt
 
+from backend.features.auth.persistence.models import Role
+
+def ensure_user_role(db: Session, user: AdminUser):
+    # 1. Fetch Roles
+    super_admin_role = db.query(Role).filter(Role.name == "SUPER_ADMIN").first()
+    user_role = db.query(Role).filter(Role.name == "USER").first()
+    
+    # 2. Check for Waili -> Super Admin
+    if user.username.lower() == "waili":
+        if user.role_id != super_admin_role.id:
+            logger.info(f"Auto-assigning SUPER_ADMIN to {user.username}")
+            user.role_id = super_admin_role.id
+            user.role = super_admin_role.name
+    
+    # 3. Default to USER if no role
+    elif not user.role_id:
+        if user_role:
+             logger.info(f"Auto-assigning USER to {user.username}")
+             user.role_id = user_role.id
+             user.role = user_role.name
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -65,6 +86,27 @@ def get_tenant_access_token():
     except Exception as e:
         logger.error(f"Exception getting Tenant Token: {e}")
         return None
+
+    except Exception as e:
+        logger.error(f"Exception getting Tenant Token: {e}")
+        return None
+
+from backend.features.auth.service.rbac_service import RBACService
+from backend.shared.dependencies import get_current_user
+
+@router.get("/auth/me")
+def get_current_user_info(user: AdminUser = Depends(get_current_user), db: Session = Depends(get_db)):
+    rbac = RBACService(db)
+    perms = rbac.get_user_permissions(user)
+    
+    return {
+        "username": user.username,
+        "full_name": user.full_name,
+        "email": user.email,
+        "role": user.role_obj.name if user.role_obj else user.role,
+        "permissions": perms["page_permissions"],
+        "is_super_admin": perms["is_super_admin"]
+    }
 
 # Local Login
 @router.post("/login", response_model=Token)
@@ -189,23 +231,24 @@ def lark_callback(request: Request, code: str, state: str = None, gap: str = Non
         user = AdminUser(
             username=username,
             authProvider=AuthProvider.LARK.value,
-            role="USER",
+            role="USER", # Default legacy
             email=user_data.get("email"),
             full_name=user_data.get("name"),
             lark_user_id=user_data.get("user_id"),
             lark_open_id=user_data.get("open_id")
         )
-        # Super Admin Rule
-        if "waili" in username.lower():
-             user.role = "SUPER_ADMIN"
-             
         db.add(user)
+        db.commit() # Commit to get ID
+        db.refresh(user)
     else:
         # Update existing
         user.authProvider = AuthProvider.LARK.value
         user.last_login = int(time.time() * 1000)
-        # Assuming we trust Lark info more, verify if we update fields
-        
+        db.commit()
+
+    # Ensure Role (For new or existing users)
+    ensure_user_role(db, user)
+    
     db.commit()
     db.refresh(user)
     

@@ -43,7 +43,31 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         logger.warning(f"User not found for token: {username}")
         raise credentials_exception
     
+    
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
         
     return user
+
+from fastapi import Request
+from backend.features.auth.service.rbac_service import RBACService
+
+def check_permission(request: Request, user: AdminUser = Depends(get_current_user), db: Session = Depends(get_db)):
+    """
+    Dependency to check if the current user has permission to access the requested API.
+    """
+    # Exclude open APIs if any (though get_current_user enforces auth)
+    # The login endpoint is usually excluded from get_current_user
+    
+    service = RBACService(db)
+    # Use request.url.path to get the path
+    # Note: If app is mounted under /api, path might include it. 
+    # Our PERMISSIONS_CONFIG definitions include /api prefix.
+    
+    if not service.check_api_access(user, request.method, request.url.path):
+        logger.warning(f"Permission Denied for user {user.username} on {request.method} {request.url.path}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to perform this action"
+        )
+

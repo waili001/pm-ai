@@ -10,6 +10,8 @@ import ProjectBacklog from './pages/ProjectBacklog';
 import ProjectPlanning from './pages/ProjectPlanning';
 import JobConfig from './pages/JobConfig';
 import MemberStatus from './pages/MemberStatus';
+import RoleManagement from './pages/RoleManagement';
+import UserManagement from './pages/UserManagement';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -72,7 +74,10 @@ function App() {
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Home />} />
           <Route path="admin/sqlite" element={<SqliteAdmin />} />
+          <Route path="admin/sqlite" element={<SqliteAdmin />} />
           <Route path="admin/jobs" element={<JobConfig />} />
+          <Route path="admin/roles" element={<RoleManagement />} />
+          <Route path="admin/users" element={<UserManagement />} />
           <Route path="project-planning" element={<ProjectPlanning />} />
           <Route path="project-backlog" element={<ProjectBacklog />} />
           <Route path="member-status" element={<MemberStatus />} />
