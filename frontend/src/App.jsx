@@ -1,22 +1,34 @@
 import { useState, useEffect } from 'react'
 import { Container, Typography, Box, Paper } from '@mui/material'
+import { authenticatedFetch } from './utils/api';
 
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Layout from './components/Layout'
-import SqliteAdmin from './pages/SqliteAdmin'
-
+import Login from './pages/Login';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import Layout from './components/Layout';
+import SqliteAdmin from './pages/SqliteAdmin';
 import ProjectBacklog from './pages/ProjectBacklog';
 import ProjectPlanning from './pages/ProjectPlanning';
 import JobConfig from './pages/JobConfig';
-import MemberStatus from './pages/MemberStatus'; // Import MemberStatus
+import MemberStatus from './pages/MemberStatus';
 
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('auth_token');
+  const location = useLocation();
+
+  if (!token) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+};
 
 function Home() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/data')
+    authenticatedFetch('/api/data')
       .then(response => response.json())
       .then(data => {
         setData(data)
@@ -56,13 +68,14 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Layout />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Home />} />
           <Route path="admin/sqlite" element={<SqliteAdmin />} />
           <Route path="admin/jobs" element={<JobConfig />} />
           <Route path="project-planning" element={<ProjectPlanning />} />
           <Route path="project-backlog" element={<ProjectBacklog />} />
-          <Route path="member-status" element={<MemberStatus />} /> {/* Add Route */}
+          <Route path="member-status" element={<MemberStatus />} />
         </Route>
       </Routes>
     </BrowserRouter>

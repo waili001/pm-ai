@@ -8,13 +8,15 @@ import logging
 import os
 
 # Import Routers
-from routers import project, jobs, system, member
+from routers import project, jobs, system, member, auth
 
 # Import needed for sync jobs in lifespan
 from jobs import sync_lark_table
 from models import LarkModelTP, LarkModelTCG, LarkModelMember, LarkModelProgram
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi import Depends
+from dependencies import get_current_user
 
 # Configure logging
 logging.basicConfig(
@@ -101,10 +103,11 @@ app.add_middleware(
 # Include Routers
 # Include Routers
 # Include Routers
-app.include_router(project.router)
-app.include_router(jobs.router)
-app.include_router(system.router)
-app.include_router(member.router)
+app.include_router(project.router, dependencies=[Depends(get_current_user)])
+app.include_router(jobs.router, dependencies=[Depends(get_current_user)])
+app.include_router(system.router, dependencies=[Depends(get_current_user)])
+app.include_router(member.router, dependencies=[Depends(get_current_user)])
+app.include_router(auth.router)
 
 # Mount Static Files (Production Mode)
 if os.path.isdir("static"):

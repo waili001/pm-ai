@@ -9,6 +9,7 @@ import {
     Stack
 } from '@mui/material';
 import { Sync as SyncIcon } from '@mui/icons-material';
+import { authenticatedFetch } from '../utils/api';
 
 export default function JobConfig() {
     const [loadingSync, setLoadingSync] = useState(false);
@@ -20,7 +21,7 @@ export default function JobConfig() {
         setLoadingVerify(true);
         setMessage(null);
         try {
-            const res = await fetch('/api/jobs/verify-jira', {
+            const res = await authenticatedFetch('/api/jobs/verify-jira', {
                 method: 'POST',
             });
             const data = await res.json();
@@ -41,7 +42,7 @@ export default function JobConfig() {
         setLoadingDept(true);
         setMessage(null);
         try {
-            const res = await fetch('/api/sync/lark/dept', {
+            const res = await authenticatedFetch('/api/sync/lark/dept', {
                 method: 'POST',
             });
             const data = await res.json();
@@ -62,7 +63,7 @@ export default function JobConfig() {
         setLoadingSync(true);
         setMessage(null);
         try {
-            const response = await fetch('/api/jobs/sync', {
+            const response = await authenticatedFetch('/api/jobs/sync', {
                 method: 'POST',
             });
 

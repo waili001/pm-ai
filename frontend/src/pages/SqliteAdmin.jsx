@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { useEffect } from 'react';
+import { authenticatedFetch } from '../utils/api';
 
 export default function SqliteAdmin() {
     const [sql, setSql] = useState('');
@@ -29,7 +30,7 @@ export default function SqliteAdmin() {
     });
 
     useEffect(() => {
-        fetch('/api/db/tables')
+        authenticatedFetch('/api/db/tables')
             .then(res => res.json())
             .then(data => setTables(data.tables || []))
             .catch(err => console.error("Failed to load tables", err));
@@ -45,7 +46,7 @@ export default function SqliteAdmin() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch('/api/db/query', {
+            const response = await authenticatedFetch('/api/db/query', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -181,7 +182,7 @@ export default function SqliteAdmin() {
                         const fetchPage = async () => {
                             setLoading(true);
                             try {
-                                const response = await fetch('/api/db/query', {
+                                const response = await authenticatedFetch('/api/db/query', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({

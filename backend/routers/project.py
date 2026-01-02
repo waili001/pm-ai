@@ -209,6 +209,7 @@ def get_tcg_tickets_by_tp(tp_number: str):
                 "status": t.jira_status, # For Kanban grouping
                 "description": t.description,  # Description field
                 "parent_tickets": t.parent_tickets,  # Parent tickets reference
+                "components": t.components, # Component for FE/BE classification
                 "sort_order": t.sort_order
             })
             

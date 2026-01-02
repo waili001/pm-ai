@@ -19,6 +19,8 @@
 #### A. Lark SSO 登入
 1.  **發起**: 前端導向 `/api/auth/lark/login` -> 重定向至 Lark 授權頁。
 2.  **Callback** (`/api/auth/lark/callback`):
+    -   **取得 Tenant Access Token** (Internal App).
+    -   **取得 User Access Token** (使用 Tenant Token 驗證).
     -   取得 User Info。
     -   **決定 Username (優先順序)**:
         1.  `name` (Display Name, e.g., "李威")
@@ -56,4 +58,4 @@
 ## 5. 環境變數 (Configuration)
 -   `LARK_APP_ID`
 -   `LARK_APP_SECRET`
--   `LARK_REDIRECT_URI`
+

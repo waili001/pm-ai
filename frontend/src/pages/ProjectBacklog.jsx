@@ -26,6 +26,7 @@ import {
 import { parseJiraMarkup } from '../utils/jiraMarkup';
 import { JiraMarkupRenderer } from '../utils/JiraMarkupRenderer';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { authenticatedFetch } from '../utils/api';
 
 const STATUS_ORDER = ["Open", "To Do", "In Progress", "Resolved", "Scheduled", "Closed"]; // Removed In Review
 
@@ -76,7 +77,7 @@ export default function ProjectBacklog() {
     // Fetch Active TPs on Mount
     useEffect(() => {
         setLoadingTPs(true);
-        fetch('/api/project/active')
+        authenticatedFetch('/api/project/active')
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
@@ -108,7 +109,7 @@ export default function ProjectBacklog() {
             addToHistory(selectedTP);
 
             setLoadingTickets(true);
-            fetch(`/api/project/${selectedTP.ticket_number}/tcg_tickets`)
+            authenticatedFetch(`/api/project/${selectedTP.ticket_number}/tcg_tickets`)
                 .then(res => res.json())
                 .then(data => {
                     if (Array.isArray(data)) {
@@ -188,6 +189,16 @@ export default function ProjectBacklog() {
     const handleCloseDialog = () => {
         setOpenDialog(false);
         setSelectedTicket(null);
+    };
+
+    const getStatusColor = (status) => {
+        const s = (status || "").toLowerCase();
+        if (s === "in progress") return "primary";
+        if (s === "in review") return "warning";
+        if (s === "resolved" || s === "scheduled" || s === "done") return "success";
+        if (s === "closed") return "success";
+        if (s === "open" || s === "to do") return "default";
+        return "default";
     };
 
     return (
@@ -275,7 +286,7 @@ export default function ProjectBacklog() {
                                 setTickets(newTickets);
 
                                 // API Call
-                                fetch('/api/project/reorder_tcg', {
+                                authenticatedFetch('/api/project/reorder_tcg', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({
@@ -305,73 +316,132 @@ export default function ProjectBacklog() {
                                                         </Typography>
 
                                                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flexGrow: 1, minHeight: 100 }}>
-                                                            {groupedTickets[status]?.map((ticket, index) => (
-                                                                <Draggable key={ticket.id || ticket.ticket_number} draggableId={ticket.id || ticket.ticket_number} index={index}>
-                                                                    {(provided, snapshot) => (
-                                                                        <Card
-                                                                            ref={provided.innerRef}
-                                                                            {...provided.draggableProps}
-                                                                            {...provided.dragHandleProps}
-                                                                            onClick={() => handleCardClick(ticket)}
-                                                                            sx={{
-                                                                                mb: 1,
-                                                                                cursor: 'pointer', // Indicate clickable
-                                                                                backgroundColor: snapshot.isDragging ? '#e3f2fd' : 'background.paper',
-                                                                                border: snapshot.isDragging ? '2px solid #2196f3' : 'none',
-                                                                                boxShadow: snapshot.isDragging ? 6 : 1,
-                                                                                transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
-                                                                                ...provided.draggableProps.style,
-                                                                                '&:hover': {
-                                                                                    boxShadow: 3 // Hover effect
-                                                                                }
-                                                                            }}
-                                                                        >
-                                                                            <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                                                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
-                                                                                    <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 'bold', zIndex: 10, position: 'relative' }}>
-                                                                                        <Link
-                                                                                            href={`https://jira.tc-gaming.co/jira/browse/${ticket.ticket_number}`}
-                                                                                            target="_blank"
-                                                                                            rel="noopener noreferrer"
-                                                                                            onClick={(e) => e.stopPropagation()}
-                                                                                            underline="hover"
-                                                                                            color="inherit"
-                                                                                        >
-                                                                                            {ticket.ticket_number}
-                                                                                        </Link>
-                                                                                    </Typography>
-                                                                                    <Chip
-                                                                                        label={ticket.issue_type || "Task"}
-                                                                                        size="small"
-                                                                                        color="secondary"
-                                                                                        sx={{ fontSize: '0.65rem', height: 18 }}
-                                                                                    />
-                                                                                </Box>
-                                                                                <Typography variant="body2" sx={{ mb: 1, lineHeight: 1.3 }}>
-                                                                                    {ticket.title}
-                                                                                </Typography>
+                                                            {groupedTickets[status]?.map((ticket, index) => {
+                                                                // Inconsistent State Logic
+                                                                const isParentFinished = ["Resolved", "Scheduled", "Closed", "Done"].includes(ticket.status);
+                                                                const hasIncompleteSubtasks = ticket.childTasks && ticket.childTasks.some(t => !["In Review", "Closed"].includes(t.status));
+                                                                const isInconsistent = isParentFinished && hasIncompleteSubtasks;
 
-                                                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                                    <Chip
-                                                                                        label={ticket.assignee || "Unassigned"}
-                                                                                        size="small"
-                                                                                        variant="outlined"
-                                                                                        sx={{ fontSize: '0.7rem', height: 20 }}
-                                                                                    />
-                                                                                    {ticket.childTasks && ticket.childTasks.length > 0 && (
+                                                                return (
+                                                                    <Draggable key={ticket.id || ticket.ticket_number} draggableId={ticket.id || ticket.ticket_number} index={index}>
+                                                                        {(provided, snapshot) => (
+                                                                            <Card
+                                                                                ref={provided.innerRef}
+                                                                                {...provided.draggableProps}
+                                                                                {...provided.dragHandleProps}
+                                                                                onClick={() => handleCardClick(ticket)}
+                                                                                sx={{
+                                                                                    mb: 1,
+                                                                                    cursor: 'pointer', // Indicate clickable
+                                                                                    backgroundColor: snapshot.isDragging ? '#e3f2fd' : 'background.paper',
+                                                                                    border: snapshot.isDragging ? '2px solid #2196f3' : (isInconsistent ? '2px solid #d32f2f' : 'none'),
+                                                                                    boxShadow: snapshot.isDragging ? 6 : 1,
+                                                                                    transition: 'background-color 0.2s ease, box-shadow 0.2s ease',
+                                                                                    ...provided.draggableProps.style,
+                                                                                    '&:hover': {
+                                                                                        boxShadow: 3 // Hover effect
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                                                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
+                                                                                        <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 'bold', zIndex: 10, position: 'relative' }}>
+                                                                                            <Link
+                                                                                                href={`https://jira.tc-gaming.co/jira/browse/${ticket.ticket_number}`}
+                                                                                                target="_blank"
+                                                                                                rel="noopener noreferrer"
+                                                                                                onClick={(e) => e.stopPropagation()}
+                                                                                                underline="hover"
+                                                                                                color="inherit"
+                                                                                            >
+                                                                                                {ticket.ticket_number}
+                                                                                            </Link>
+                                                                                        </Typography>
                                                                                         <Chip
-                                                                                            label={`Tasks: ${ticket.childTasks.length}`}
+                                                                                            label={ticket.issue_type || "Task"}
                                                                                             size="small"
-                                                                                            color="warning"
+                                                                                            color="secondary"
+                                                                                            sx={{ fontSize: '0.65rem', height: 18 }}
+                                                                                        />
+                                                                                    </Box>
+                                                                                    <Typography variant="body2" sx={{ mb: 1, lineHeight: 1.3 }}>
+                                                                                        {ticket.title}
+                                                                                    </Typography>
+
+                                                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                                        <Chip
+                                                                                            label={ticket.assignee || "Unassigned"}
+                                                                                            size="small"
+                                                                                            variant="outlined"
                                                                                             sx={{ fontSize: '0.7rem', height: 20 }}
                                                                                         />
-                                                                                    )}
-                                                                                </Box>
-                                                                            </CardContent>
-                                                                        </Card>
-                                                                    )}
-                                                                </Draggable>
-                                                            ))}
+                                                                                        {ticket.childTasks && ticket.childTasks.length > 0 && (() => {
+                                                                                            const stats = {
+                                                                                                total: 0,
+                                                                                                done: 0,
+                                                                                                fe: { total: 0, done: 0 },
+                                                                                                be: { total: 0, done: 0 }
+                                                                                            };
+
+                                                                                            ticket.childTasks.forEach(t => {
+                                                                                                stats.total++;
+                                                                                                const isDone = t.status === "In Review" || t.status === "Closed";
+                                                                                                if (isDone) stats.done++;
+
+                                                                                                // FE vs BE Logic
+                                                                                                // Components is a comma separated string usually, or potentially null
+                                                                                                const comps = t.components || "";
+                                                                                                if (comps.includes("TAD TAC UI")) {
+                                                                                                    stats.fe.total++;
+                                                                                                    if (isDone) stats.fe.done++;
+                                                                                                } else {
+                                                                                                    stats.be.total++;
+                                                                                                    if (isDone) stats.be.done++;
+                                                                                                }
+                                                                                            });
+
+                                                                                            const pct = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0;
+
+                                                                                            // Only show percentage if parent ticket status is "In Progress"
+                                                                                            if (ticket.status !== "In Progress") {
+                                                                                                return (
+                                                                                                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                                                                        <Chip
+                                                                                                            label={`Tasks: ${stats.total}`}
+                                                                                                            size="small"
+                                                                                                            color="default"
+                                                                                                            variant="outlined"
+                                                                                                            sx={{ fontSize: '0.7rem', height: 20 }}
+                                                                                                        />
+                                                                                                    </Box>
+                                                                                                );
+                                                                                            }
+
+                                                                                            return (
+                                                                                                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                                                                    <Chip
+                                                                                                        label={`Dev: ${pct}%`}
+                                                                                                        size="small"
+                                                                                                        color={pct === 100 ? "success" : "warning"}
+                                                                                                        sx={{ fontSize: '0.7rem', height: 20, fontWeight: 'bold' }}
+                                                                                                    />
+                                                                                                    <Chip
+                                                                                                        label={`Tasks: ${stats.total}`}
+                                                                                                        size="small"
+                                                                                                        color="default"
+                                                                                                        variant="outlined"
+                                                                                                        sx={{ fontSize: '0.7rem', height: 20 }}
+                                                                                                    />
+                                                                                                </Box>
+                                                                                            );
+                                                                                        })()}
+                                                                                    </Box>
+                                                                                </CardContent>
+                                                                            </Card>
+                                                                        )}
+                                                                    </Draggable>
+                                                                );
+                                                            })}
                                                             {provided.placeholder}
                                                         </Box>
                                                     </Paper>
@@ -390,10 +460,22 @@ export default function ProjectBacklog() {
             {/* Ticket Detail Dialog */}
             <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
                 <DialogTitle>
-                    {selectedTicket?.ticket_number}
-                    <Typography variant="subtitle2" color="text.secondary">
-                        {selectedTicket?.issue_type} - {selectedTicket?.status}
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                            {selectedTicket?.ticket_number}
+                            <Chip
+                                label={selectedTicket?.issue_type}
+                                size="small"
+                                color="secondary"
+                                variant="outlined"
+                            />
+                        </Box>
+                        <Chip
+                            label={selectedTicket?.status}
+                            color={getStatusColor(selectedTicket?.status)}
+                            size="small"
+                        />
+                    </Box>
                 </DialogTitle>
                 <DialogContent dividers sx={{
                     scrollbarWidth: 'none',
@@ -459,7 +541,13 @@ export default function ProjectBacklog() {
                                                 </Typography>
                                             </Grid>
                                             <Grid item xs={2}>
-                                                <Chip label={child.status} size="small" variant="outlined" sx={{ height: 16, fontSize: '0.65rem' }} />
+                                                <Chip
+                                                    label={child.status}
+                                                    size="small"
+                                                    color={getStatusColor(child.status)}
+                                                    variant="outlined"
+                                                    sx={{ height: 16, fontSize: '0.65rem' }}
+                                                />
                                             </Grid>
                                         </Grid>
                                     </ListItem>

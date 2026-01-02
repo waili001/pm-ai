@@ -12,6 +12,25 @@ Product Backlog 是一個看板 (Kanban) 介面，用於管理 TCG Tickets。使
         *   排序結果會儲存至資料庫 (`TCG_Tickets` Table 的 `sort_order` 欄位)。
         *   重新整理頁面後，卡片必須依據 `sort_order` 保持順序。
 
+    *   **Ticket Status & Team Logic (Dev Task Status)**:
+        *   **Dev Task 狀態顯示**：
+            *   需在 Kanban 卡片上顯示 Change Request (CR) Ticket 所屬 Dev Tasks 的整體狀態。
+            *   **[NEW]** 需顯示 Dev Tasks 完成進度百分比 (例如: 50%, 100%)。
+            *   **[CONDITION]** 僅當 CR Ticket 狀態為 `In Progress` 時顯示此百分比。
+            *   CR Ticket 下可能包含多個 Dev Tickets。
+        *   **Detail Dialog UI**:
+            *   Ticket Status 與 Sub-task Status 需使用固定顏色標示 (Color Coded Chips)。
+        *   **Inconsistent State Highlight (狀態不一致警示)**：
+            *   若 Parent Ticket 在 "Finished" 狀態 (Resolved, Scheduled, Closed, Done)。
+            *   且 仍有 Sub-tasks 未完成 (狀態非 In Review 或 Closed)。
+            *   需 **Highlight** 該 Parent Ticket (例如: 紅色邊框或警示圖示)。
+        *   **Team Assignment Rule (團隊歸屬規則)**：
+            *   若 Ticket Component 為 `TAD TAC UI`，歸類為 **Frontend (FE) Team**。
+            *   否則 (Else)，歸類為 **Backend (API) Team**。
+        *   **Task Completion Logic (任務完成判定)**：
+            *   若 Dev Task 狀態為 `In Review` 或 `Closed`，則視為 **開發已完成 (Done)**。
+
+
 ## Implementation Details
 *   **Database Schema Updates**:
     *   `TCG_Tickets` table: 新增 `sort_order` (Integer, default=0) 欄位。

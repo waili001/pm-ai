@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import { JiraMarkupRenderer } from '../utils/JiraMarkupRenderer';
+import { authenticatedFetch } from '../utils/api';
 
 const MemberStatus = () => {
     const [departments, setDepartments] = useState([]);
@@ -38,7 +39,7 @@ const MemberStatus = () => {
         setLoadingTicket(true);
         setSelectedTicket(null); // Clear previous
         try {
-            const response = await fetch(`/api/project/ticket/${ticketNumber}`);
+            const response = await authenticatedFetch(`/api/project/ticket/${ticketNumber}`);
             if (response.ok) {
                 const data = await response.json();
                 setSelectedTicket(data);
@@ -62,7 +63,7 @@ const MemberStatus = () => {
         const fetchDepts = async () => {
             setLoadingDepts(true);
             try {
-                const response = await fetch('/api/members/departments');
+                const response = await authenticatedFetch('/api/members/departments');
                 if (response.ok) {
                     const data = await response.json();
 
@@ -96,7 +97,7 @@ const MemberStatus = () => {
             setLoading(true);
             try {
                 // Encode dept name for URL
-                const response = await fetch(`/api/members/status?department=${encodeURIComponent(selectedDept)}`);
+                const response = await authenticatedFetch(`/api/members/status?department=${encodeURIComponent(selectedDept)}`);
                 if (response.ok) {
                     const data = await response.json();
                     // Add unique ID for DataGrid

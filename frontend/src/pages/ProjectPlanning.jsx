@@ -31,6 +31,7 @@ import HighchartsReact from 'highcharts-react-official';
 import Xrange from 'highcharts/modules/xrange';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useNavigate } from 'react-router-dom';
+import { authenticatedFetch } from '../utils/api';
 
 // Helper to format due day
 const formatDueDay = (val) => {
@@ -93,7 +94,7 @@ export default function ProjectPlanning() {
     // Fetch filters options on mount
     useEffect(() => {
         // Fetch Departments
-        fetch('/api/project/departments')
+        authenticatedFetch('/api/project/departments')
             .then(res => res.json())
             .then(data => {
                 setDepartmentsList(["ALL", ...data]);
@@ -101,7 +102,7 @@ export default function ProjectPlanning() {
             .catch(err => console.error("Error fetching departments:", err));
 
         // Fetch Programs
-        fetch('/api/project/programs')
+        authenticatedFetch('/api/project/programs')
             .then(res => res.json())
             .then(data => {
                 setProgramsList(["ALL", ...data]);
@@ -130,7 +131,7 @@ export default function ProjectPlanning() {
         if (department && department !== "ALL") params.append("department", department);
         if (projectType && projectType !== "ALL") params.append("project_type", projectType);
 
-        fetch(`/api/project/planning?${params.toString()}`)
+        authenticatedFetch(`/api/project/planning?${params.toString()}`)
             .then(res => res.json())
             .then(data => {
                 setProjects(data);
@@ -217,7 +218,7 @@ export default function ProjectPlanning() {
             setProjects(newProjects);
 
             // Call API in background
-            fetch('/api/project/reorder', {
+            authenticatedFetch('/api/project/reorder', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
