@@ -201,6 +201,14 @@ export default function ProjectBacklog() {
         return "default";
     };
 
+    const getIssueTypeColor = (type) => {
+        const t = (type || "").toLowerCase();
+        if (t === "bug") return "error";
+        if (t === "story") return "success";
+        if (t === "change request") return "secondary"; // Purple in default MUI, or use custom color logic if needed
+        return "default";
+    };
+
     return (
         <Box sx={{ width: '100%', px: 3, py: 0 }}>
             <Box sx={{ my: 4 }}>
@@ -360,7 +368,8 @@ export default function ProjectBacklog() {
                                                                                         <Chip
                                                                                             label={ticket.issue_type || "Task"}
                                                                                             size="small"
-                                                                                            color="secondary"
+                                                                                            color={getIssueTypeColor(ticket.issue_type)}
+                                                                                            variant={getIssueTypeColor(ticket.issue_type) === 'default' ? "outlined" : "filled"}
                                                                                             sx={{ fontSize: '0.65rem', height: 18 }}
                                                                                         />
                                                                                     </Box>
@@ -400,12 +409,19 @@ export default function ProjectBacklog() {
                                                                                                 }
                                                                                             });
 
-                                                                                            const pct = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0;
+                                                                                            const fePct = stats.fe.total > 0 ? Math.round((stats.fe.done / stats.fe.total) * 100) : 0;
+                                                                                            const bePct = stats.be.total > 0 ? Math.round((stats.be.done / stats.be.total) * 100) : 0;
 
-                                                                                            // Only show percentage if parent ticket status is "In Progress"
-                                                                                            if (ticket.status !== "In Progress") {
+                                                                                            // Condition 1: Parent Finished (Inconsistent State Warning)
+                                                                                            if (isParentFinished) {
                                                                                                 return (
                                                                                                     <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                                                                        {stats.fe.total > 0 && stats.fe.done < stats.fe.total && (
+                                                                                                            <Chip label="FE Pending" size="small" color="error" sx={{ fontSize: '0.65rem', height: 20, fontWeight: 'bold' }} />
+                                                                                                        )}
+                                                                                                        {stats.be.total > 0 && stats.be.done < stats.be.total && (
+                                                                                                            <Chip label="BE Pending" size="small" color="error" sx={{ fontSize: '0.65rem', height: 20, fontWeight: 'bold' }} />
+                                                                                                        )}
                                                                                                         <Chip
                                                                                                             label={`Tasks: ${stats.total}`}
                                                                                                             size="small"
@@ -417,14 +433,40 @@ export default function ProjectBacklog() {
                                                                                                 );
                                                                                             }
 
+                                                                                            // Condition 2: In Progress (Show Progress Split)
+                                                                                            if (ticket.status === "In Progress") {
+                                                                                                return (
+                                                                                                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                                                                        {stats.fe.total > 0 && (
+                                                                                                            <Chip
+                                                                                                                label={`FE: ${fePct}%`}
+                                                                                                                size="small"
+                                                                                                                color={fePct === 100 ? "success" : "warning"}
+                                                                                                                sx={{ fontSize: '0.65rem', height: 20, fontWeight: 'bold' }}
+                                                                                                            />
+                                                                                                        )}
+                                                                                                        {stats.be.total > 0 && (
+                                                                                                            <Chip
+                                                                                                                label={`BE: ${bePct}%`}
+                                                                                                                size="small"
+                                                                                                                color={bePct === 100 ? "success" : "warning"}
+                                                                                                                sx={{ fontSize: '0.65rem', height: 20, fontWeight: 'bold' }}
+                                                                                                            />
+                                                                                                        )}
+                                                                                                        <Chip
+                                                                                                            label={`Tasks: ${stats.total}`}
+                                                                                                            size="small"
+                                                                                                            color="default"
+                                                                                                            variant="outlined"
+                                                                                                            sx={{ fontSize: '0.7rem', height: 20 }}
+                                                                                                        />
+                                                                                                    </Box>
+                                                                                                );
+                                                                                            }
+
+                                                                                            // Default: Show just task count
                                                                                             return (
                                                                                                 <Box sx={{ display: 'flex', gap: 0.5 }}>
-                                                                                                    <Chip
-                                                                                                        label={`Dev: ${pct}%`}
-                                                                                                        size="small"
-                                                                                                        color={pct === 100 ? "success" : "warning"}
-                                                                                                        sx={{ fontSize: '0.7rem', height: 20, fontWeight: 'bold' }}
-                                                                                                    />
                                                                                                     <Chip
                                                                                                         label={`Tasks: ${stats.total}`}
                                                                                                         size="small"
@@ -466,8 +508,8 @@ export default function ProjectBacklog() {
                             <Chip
                                 label={selectedTicket?.issue_type}
                                 size="small"
-                                color="secondary"
-                                variant="outlined"
+                                color={getIssueTypeColor(selectedTicket?.issue_type)}
+                                variant={getIssueTypeColor(selectedTicket?.issue_type) === 'default' ? "outlined" : "filled"}
                             />
                         </Box>
                         <Chip
@@ -516,7 +558,17 @@ export default function ProjectBacklog() {
                             '&::-webkit-scrollbar': { display: 'none' }
                         }}>
                             <List dense>
-                                {selectedTicket.childTasks.map(child => (
+                                {[...selectedTicket.childTasks].sort((a, b) => {
+                                    const getStatusWeight = (status) => {
+                                        const s = (status || "").toLowerCase();
+                                        if (s === "open" || s === "to do") return 1;
+                                        if (s === "in progress") return 2;
+                                        if (s === "in review") return 3;
+                                        if (["resolved", "scheduled", "done", "closed"].includes(s)) return 4;
+                                        return 5; // Unknown
+                                    };
+                                    return getStatusWeight(a.status) - getStatusWeight(b.status);
+                                }).map(child => (
                                     <ListItem key={child.ticket_number} disablePadding sx={{ py: 0.5 }}>
                                         <Grid container alignItems="center" spacing={1}>
                                             <Grid item xs={3}>

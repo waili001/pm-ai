@@ -16,10 +16,19 @@ Product Backlog 是一個看板 (Kanban) 介面，用於管理 TCG Tickets。使
         *   **Dev Task 狀態顯示**：
             *   需在 Kanban 卡片上顯示 Change Request (CR) Ticket 所屬 Dev Tasks 的整體狀態。
             *   **[NEW]** 需顯示 Dev Tasks 完成進度百分比 (例如: 50%, 100%)。
-            *   **[CONDITION]** 僅當 CR Ticket 狀態為 `In Progress` 時顯示此百分比。
+            *   **[REFINEMENT]** 需區分 **FE** 與 **BE** 的進度 (例如: `FE: 50%`, `BE: 100%`)，以便清楚知道哪個端尚未完成。
+            *   **[CONDITION]** 當 CR Ticket 狀態為 `In Progress` 時顯示進度。
+            *   **[CONDITION]** 當 CR Ticket 狀態為 Finished (Resolved/Close) 但有未完成子任務時，顯示 `FE Pending` 或 `BE Pending` 標籤。
             *   CR Ticket 下可能包含多個 Dev Tickets。
+        *   **Issue Type Color (類型顏色)**：
+            *   需為不同的 Issue Type 設定不同的顯示顏色。
+            *   **Change Request**: Secondary / Purple (預設)
+            *   **Bug**: Error / Red (紅色)
+            *   **Story**: Success / Green (綠色)
+            *   **Task/Sub-task**: Default / Grey (灰色)
         *   **Detail Dialog UI**:
             *   Ticket Status 與 Sub-task Status 需使用固定顏色標示 (Color Coded Chips)。
+            *   **[NEW]** Sub-tasks 需依照 Status 排序顯示：`Open` > `In Progress` > `In Review` > `Closed`。
         *   **Inconsistent State Highlight (狀態不一致警示)**：
             *   若 Parent Ticket 在 "Finished" 狀態 (Resolved, Scheduled, Closed, Done)。
             *   且 仍有 Sub-tasks 未完成 (狀態非 In Review 或 Closed)。
