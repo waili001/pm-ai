@@ -63,8 +63,23 @@ def run_sync_jobs(force_full: bool = False):
     if MEMBER_APP_TOKEN and MEMBER_TABLE_ID:
         sync_lark_table(MEMBER_APP_TOKEN, MEMBER_TABLE_ID, LarkModelMember, force_full=force_full)
 
+# Import Startup Scripts
+from backend.scripts.migrate_db_rbac import migrate as run_db_migration
+from backend.scripts.init_rbac import init_rbac
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Run DB Migrations & RBAC Init on startup
+    try:
+        logger.info("Running DB Migrations...")
+        run_db_migration()
+        logger.info("Running RBAC Initialization...")
+        init_rbac()
+    except Exception as e:
+        logger.error(f"Startup tasks failed: {e}")
+        # Decide if we want to crash or continue. Crashing is safer for schema consistency.
+        # raise e 
+
     # Start scheduler
     # Sync every 15 minutes as per Member Info requirement
     scheduler.add_job(run_sync_jobs, 'interval', minutes=15)
@@ -91,15 +106,26 @@ app = FastAPI(lifespan=lifespan)
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
-# Allow CORS for local development
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+# CORS Configuration
+# Allow CORS for local development by default, or specific origins from Env
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "")
+if allowed_origins_str:
+    origins = allowed_origins_str.split(",")
+else:
+    # Default local development
+    origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
+
+# If on Railway (RAILWAY_PUBLIC_DOMAIN env var exists), maybe add it?
+railway_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN")
+if railway_domain:
+    origins.append(f"https://{railway_domain}")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins, # If dynamic/wildcard needed, use ["*"] but be careful with auth
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
