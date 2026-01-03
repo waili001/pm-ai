@@ -21,8 +21,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Ensure logs are visible immediately
 ENV PYTHONUNBUFFERED=1
 
-# Copy Backend Code
-COPY backend/ ./
+# Copy Backend Code (Keep directory structure for imports)
+COPY backend/ backend/
 
 # Create data directory for SQLite persistence
 RUN mkdir -p /app/data
@@ -34,5 +34,8 @@ COPY --from=frontend-builder /app/frontend/dist ./static
 # Expose Port (Railway controls this, but good for doc)
 EXPOSE 8000
 
-# Run Command (Use shell to interpolate PORT env var for Railway)
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Set PYTHONPATH to /app so 'backend' package is found
+ENV PYTHONPATH=/app
+
+# Run Command (Run as module to ensure relative imports work)
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
