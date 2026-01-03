@@ -3,6 +3,7 @@ import { Container, Typography, Box, Paper } from '@mui/material'
 import { authenticatedFetch } from './utils/api';
 
 import Login from './pages/Login';
+import TicketSearch from './pages/TicketSearch';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import SqliteAdmin from './pages/SqliteAdmin';
@@ -74,13 +75,13 @@ function App() {
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route index element={<Home />} />
           <Route path="admin/sqlite" element={<SqliteAdmin />} />
-          <Route path="admin/sqlite" element={<SqliteAdmin />} />
           <Route path="admin/jobs" element={<JobConfig />} />
           <Route path="admin/roles" element={<RoleManagement />} />
           <Route path="admin/users" element={<UserManagement />} />
           <Route path="project-planning" element={<ProjectPlanning />} />
           <Route path="project-backlog" element={<ProjectBacklog />} />
           <Route path="member-status" element={<MemberStatus />} />
+          <Route path="ticket-search" element={<TicketSearch />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -226,6 +226,25 @@ def get_ticket_details(ticket_number: str):
         # Search in TCG first (has description)
         tcg = db.query(LarkModelTCG).filter(LarkModelTCG.tcg_tickets == ticket_number).first()
         if tcg:
+            # Compute sub-tasks: Find tickets where parent_tickets contains this ticket number
+            # Using ilike for robust partial match (e.g. "TCG-123", "TCG-123, TCG-456")
+            sub_tasks_query = db.query(LarkModelTCG).filter(
+                LarkModelTCG.parent_tickets.ilike(f"%{ticket_number}%")
+            ).all()
+            
+            sub_tasks_details = []
+            for t in sub_tasks_query:
+                if t.tcg_tickets:
+                    sub_tasks_details.append({
+                        "ticket_number": t.tcg_tickets,
+                        "title": t.title,
+                        "status": t.jira_status,
+                        "assignee": t.assignee
+                    })
+            
+            # Sort by ticket number
+            sub_tasks_details.sort(key=lambda x: x["ticket_number"])
+
             return {
                 "ticket_number": tcg.tcg_tickets,
                 "title": tcg.title,
@@ -233,7 +252,10 @@ def get_ticket_details(ticket_number: str):
                 "assignee": tcg.assignee,
                 "reporter": tcg.reporter,
                 "description": tcg.description, # TCG has description
-                "issue_type": tcg.issue_type
+                "issue_type": tcg.issue_type,
+                "tp_number": tcg.tp_number,
+                "fix_versions": tcg.fix_versions,
+                "sub_tasks": sub_tasks_details
             }
 
         # Search in TP

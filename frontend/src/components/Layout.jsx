@@ -29,7 +29,8 @@ import {
     Settings,
     Assignment,
     Security,
-    People
+    People,
+    Search as SearchIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { authenticatedFetch } from '../utils/api';
@@ -193,6 +194,21 @@ export default function Layout() {
                                         <Dashboard />
                                     </ListItemIcon>
                                     <ListItemText primary="Member Status" />
+                                </ListItemButton>
+                            </ListItem>
+                        )}
+
+                        {/* Ticket Search Link - Protected by TICKET_SEARCH */}
+                        {hasPermission('TICKET_SEARCH') && (
+                            <ListItem disablePadding>
+                                <ListItemButton
+                                    selected={location.pathname === '/ticket-search'}
+                                    onClick={() => navigate('/ticket-search')}
+                                >
+                                    <ListItemIcon>
+                                        <SearchIcon />
+                                    </ListItemIcon>
+                                    <ListItemText primary="Ticket Search" />
                                 </ListItemButton>
                             </ListItem>
                         )}
