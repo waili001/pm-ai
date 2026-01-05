@@ -53,6 +53,23 @@ def migrate_tp_projects(conn):
     except Exception as e:
         logger.error(f"TP Projects Migration failed: {e}")
 
+    try:
+        # Check for new completion fields
+        if 'fe_completed_percentage' not in columns:
+            logger.info("Adding 'fe_completed_percentage' column to 'tp_projects' table...")
+            conn.execute(text("ALTER TABLE tp_projects ADD COLUMN fe_completed_percentage INTEGER DEFAULT 0"))
+        
+        if 'be_completed_percentage' not in columns:
+            logger.info("Adding 'be_completed_percentage' column to 'tp_projects' table...")
+            conn.execute(text("ALTER TABLE tp_projects ADD COLUMN be_completed_percentage INTEGER DEFAULT 0"))
+
+        if 'fe_status_all_open' not in columns:
+            logger.info("Adding 'fe_status_all_open' column to 'tp_projects' table...")
+            conn.execute(text("ALTER TABLE tp_projects ADD COLUMN fe_status_all_open BOOLEAN DEFAULT 0"))
+
+    except Exception as e:
+        logger.error(f"TP Projects Extended Migration failed: {e}")
+
 def run_all_migrations():
     """Run all database migrations."""
     logger.info("--- Starting Database Migrations ---")
