@@ -30,7 +30,8 @@ import {
     Assignment,
     Security,
     People,
-    Search as SearchIcon
+    Search as SearchIcon,
+    WarningAmber
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { authenticatedFetch } from '../utils/api';
@@ -200,17 +201,30 @@ export default function Layout() {
 
                         {/* Ticket Search Link - Protected by TICKET_SEARCH */}
                         {hasPermission('TICKET_SEARCH') && (
-                            <ListItem disablePadding>
-                                <ListItemButton
-                                    selected={location.pathname === '/ticket-search'}
-                                    onClick={() => navigate('/ticket-search')}
-                                >
-                                    <ListItemIcon>
-                                        <SearchIcon />
-                                    </ListItemIcon>
-                                    <ListItemText primary="Ticket Search" />
-                                </ListItemButton>
-                            </ListItem>
+                            <>
+                                <ListItem disablePadding>
+                                    <ListItemButton
+                                        selected={location.pathname === '/ticket-search'}
+                                        onClick={() => navigate('/ticket-search')}
+                                    >
+                                        <ListItemIcon>
+                                            <SearchIcon />
+                                        </ListItemIcon>
+                                        <ListItemText primary="Ticket Search" />
+                                    </ListItemButton>
+                                </ListItem>
+                                <ListItem disablePadding>
+                                    <ListItemButton
+                                        selected={location.pathname === '/ticket-anomaly'}
+                                        onClick={() => navigate('/ticket-anomaly')}
+                                    >
+                                        <ListItemIcon>
+                                            <WarningAmber />
+                                        </ListItemIcon>
+                                        <ListItemText primary="Ticket Anomaly" />
+                                    </ListItemButton>
+                                </ListItem>
+                            </>
                         )}
 
                         {/* Validating if ANY admin page is accessible to show parent menu */}

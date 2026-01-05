@@ -44,3 +44,9 @@ service 目錄 放 service 的檔案
 2. **Null Safety in Data Sync (數據同步的空值安全)**:
    - When syncing data from external APIs (Lark/Bitfinex) to DB, explicitly handle `None`/`null` values.
    - Do not assume a field always exists. Use `.get('field', default)` or explicitly check for existence.
+
+### [2026-01-06] Import Safety Rules
+1. **Check Imports After Modification (修改後檢查引用)**:
+   - 每一次新增或修改程式碼後，**必須**主動檢查是否有新的 Module 尚未 Import。
+   - 特別注意跨目錄引用 (Relative Import) 的層級 (`.` vs `..` vs `...`)，必須根據當前檔案位置精確計算。
+   - 若引入了新的 Class 或 Function，務必在檔案開頭加入對應的 Import 語句。

@@ -10,6 +10,8 @@ from backend.shared.integration.lark_client import list_records
 # Configure logger
 logger = logging.getLogger(__name__)
 
+from ...project.service.anomaly_service import AnomalyService
+
 def get_latest_update_time(db: Session, model_class):
     # Each model is now dedicated to a single table, so no need to filter by table_id
     record = db.query(model_class).order_by(model_class.updated_at.desc()).first()
@@ -222,6 +224,16 @@ def sync_lark_table(app_token: str, table_id: str, model_class, force_full: bool
              else:
                  logger.info(f"✓ Sync complete. Total: {total_fetched} records")
                  break 
+        
+        # Trigger Anomaly Detection if syncing TCG (or post-sync generally)
+        if model_class == LarkModelTCG or model_class == LarkModelTP:
+            logger.info("Triggering Anomaly Detection...")
+            try:
+                anomaly_service = AnomalyService(db)
+                anomaly_service.refresh_anomalies()
+                logger.info("Anomaly Detection Finished.")
+            except Exception as ae:
+                logger.error(f"Anomaly Detection Failed: {ae}")
 
     except Exception as e:
         logger.error(f"Error executing sync_lark_table: {e}", exc_info=True)

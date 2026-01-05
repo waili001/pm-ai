@@ -70,7 +70,19 @@ class LarkModelTCG(Base):
     tp_number = Column(Text)
     title = Column(Text)
     parent_tickets = Column(Text)  # Parent tickets reference from Lark "Parent Tickets" field
-    lark_updated_date = Column(String) # Mapped from 'Updated Date'
+
+class TicketAnomaly(Base):
+    __tablename__ = "ticket_anomalies"
+
+    id = Column(Integer, primary_key=True, index=True)
+    ticket_number = Column(String, index=True)
+    ticket_title = Column(String)
+    tp_number = Column(String, index=True)
+    tp_title = Column(String)
+    assignee = Column(String)
+    parent_status = Column(String)
+    anomaly_reason = Column(String)
+    detected_at = Column(BigInteger) # Timestamp ms
 
     # Legacy / Unused fields (Kept temporarily or if needed for other logic)
     status = Column(String) 

@@ -4,6 +4,7 @@ import { authenticatedFetch } from './utils/api';
 
 import Login from './pages/Login';
 import TicketSearch from './pages/TicketSearch';
+import TicketAnomaly from './pages/TicketAnomaly';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import SqliteAdmin from './pages/SqliteAdmin';
@@ -82,6 +83,7 @@ function App() {
           <Route path="project-backlog" element={<ProjectBacklog />} />
           <Route path="member-status" element={<MemberStatus />} />
           <Route path="ticket-search" element={<TicketSearch />} />
+          <Route path="ticket-anomaly" element={<TicketAnomaly />} />
         </Route>
       </Routes>
     </BrowserRouter>

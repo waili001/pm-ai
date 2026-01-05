@@ -21,7 +21,7 @@ from fastapi.responses import FileResponse
 # Import needed for sync jobs in lifespan
 from backend.features.sync.service.sync_service import sync_lark_table, calculate_tp_completion
 # Ensure all models are imported for Base.metadata.create_all
-from backend.features.project.persistence.models import LarkModelTP, LarkModelTCG, LarkModelProgram
+from backend.features.project.persistence.models import LarkModelTP, LarkModelTCG, LarkModelProgram, TicketAnomaly
 from backend.features.member.persistence.models import LarkModelMember
 from backend.features.auth.persistence.models import AdminUser
 from backend.features.system.persistence.models import LarkModelDept

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from backend.shared.database import SessionLocal
-from backend.features.project.persistence.models import LarkModelTP, LarkModelTCG, LarkModelProgram
+from backend.features.project.persistence.models import LarkModelTP, LarkModelTCG, LarkModelProgram, TicketAnomaly
 from backend.features.system.persistence.models import LarkModelDept
 from typing import List, Optional
 from pydantic import BaseModel
@@ -299,5 +299,17 @@ def get_departments():
         # Flatten result list of tuples [('DeptA',), ('DeptB',)] -> ['DeptA', 'DeptB']
         results = [d[0] for d in depts if d[0]]
         return sorted(results)
+    finally:
+        db.close()
+
+@router.get("/anomalies")
+def get_ticket_anomalies():
+    """
+    Get all detected ticket anomalies.
+    """
+    db = SessionLocal()
+    try:
+        anomalies = db.query(TicketAnomaly).order_by(TicketAnomaly.detected_at.desc()).all()
+        return anomalies
     finally:
         db.close()
