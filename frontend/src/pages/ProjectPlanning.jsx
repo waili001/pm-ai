@@ -84,6 +84,7 @@ export default function ProjectPlanning() {
     // Read initial state from localStorage or default
     const [program, setProgram] = useState(() => localStorage.getItem('planning_program') || "ALL");
     const [department, setDepartment] = useState(() => localStorage.getItem('planning_department') || "ALL");
+    const [participatedDept, setParticipatedDept] = useState(() => localStorage.getItem('planning_participated_dept') || "ALL");
     const [projectType, setProjectType] = useState(() => localStorage.getItem('planning_project_type') || "ALL");
     const [viewMode, setViewMode] = useState("KANBAN"); // KANBAN or GANTT
 
@@ -114,8 +115,9 @@ export default function ProjectPlanning() {
     useEffect(() => {
         if (program) localStorage.setItem('planning_program', program);
         if (department) localStorage.setItem('planning_department', department);
+        if (participatedDept) localStorage.setItem('planning_participated_dept', participatedDept);
         if (projectType) localStorage.setItem('planning_project_type', projectType);
-    }, [program, department, projectType]);
+    }, [program, department, participatedDept, projectType]);
 
     const fetchProjects = () => {
         setLoading(true);
@@ -129,6 +131,7 @@ export default function ProjectPlanning() {
         // Let's pass it because backend `project.py` updated to check `department != "ALL"`.
         if (program && program !== "ALL") params.append("program", program);
         if (department && department !== "ALL") params.append("department", department);
+        if (participatedDept && participatedDept !== "ALL") params.append("participated_dept", participatedDept);
         if (projectType && projectType !== "ALL") params.append("project_type", projectType);
 
         authenticatedFetch(`/api/project/planning?${params.toString()}`)
@@ -145,7 +148,7 @@ export default function ProjectPlanning() {
 
     useEffect(() => {
         fetchProjects();
-    }, [program, department, projectType]);
+    }, [program, department, participatedDept, projectType]);
 
     const handleViewChange = (event, newView) => {
         if (newView !== null) {
@@ -355,7 +358,6 @@ export default function ProjectPlanning() {
     };
 
     // --- Gantt View Components ---
-    // --- Gantt View Components ---
     const GanttChart = () => {
 
         // Helper to parse date to timestamp
@@ -515,12 +517,25 @@ export default function ProjectPlanning() {
 
                     {/* Department Filter - 2nd Position */}
                     <Grid size={{ xs: 12, md: 1 }}>
-                        <Box sx={{ minWidth: 100, maxWidth: 200 }}>
+                        <Box sx={{ minWidth: 100, maxWidth: '100%' }}>
                             <Autocomplete
                                 options={departmentsList}
                                 renderInput={(params) => <TextField {...params} label="Department" />}
                                 value={department}
                                 onChange={(e, newVal) => setDepartment(newVal || "ALL")}
+                                freeSolo
+                            />
+                        </Box>
+                    </Grid>
+
+                    {/* Participated Dept Filter - 3rd Position */}
+                    <Grid size={{ xs: 12, md: 1 }}>
+                        <Box sx={{ minWidth: 100, maxWidth: '100%' }}>
+                            <Autocomplete
+                                options={departmentsList}
+                                renderInput={(params) => <TextField {...params} label="Participated Dept" />}
+                                value={participatedDept}
+                                onChange={(e, newVal) => setParticipatedDept(newVal || "ALL")}
                                 freeSolo
                             />
                         </Box>

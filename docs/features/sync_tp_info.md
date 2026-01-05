@@ -11,6 +11,8 @@ The following fields are currently missing or need to be ensured they are synchr
 - **Due Day**: The due date for the TP.
 - **Start Date**: The start date of the project.
 - **SIT Date**: The SIT date of the project.
+- **Participated Dept**: The department which involved in this TP.
+
 
 ## Technical Requirements
 - Update Database Schema to include these columns.

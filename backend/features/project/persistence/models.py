@@ -10,6 +10,7 @@ class LarkModelTP(Base):
     # Specific Fields
     components = Column(Text) # List -> Comma separated string
     department = Column(Text) # List -> Comma separated string
+    participated_dept = Column(Text) # List -> Comma separated string
     
     # Analysis Fields
     completed_percentage = Column(Integer) # Calculated field: Closed / Total Tickets * 100

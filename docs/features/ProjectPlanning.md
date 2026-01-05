@@ -7,6 +7,7 @@
 *   **頁面頂部過濾器**：
     *   選擇 Program (New) - **First Option** (Default: `ALL`, Empty input reverts to `ALL`)
     *   選擇部門 (`Department`) (Default: `ALL`, Empty input reverts to `ALL`)
+    *   選擇參與部門 (`Participated Dept`) (Default: `ALL`)
     *   選擇 Project Type (`ALL` / `Tech` / `Integration` / `ICR` / `Project`) (Default: `ALL`)
     *   檢視模式切換：`Kanban` 或 `Gantt` (甘特圖)
 
@@ -44,4 +45,5 @@
     *   **Persistence**: "Department" and "Project Type" selections must be saved in `localStorage` and restored on page load.
     *   **Department Filter**: Add "ALL" option (Default).
     *   **Data Logic**: For projects with `status="Closed"`, only display if `updated_at` is within the last 4 months.
+    *   **Participated Dept Logic**: check if `participated_dept` includes the selected value AND `department` is NOT the selected value. This filters for projects where the department assisted but did not own.
 

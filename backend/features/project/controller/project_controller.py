@@ -63,7 +63,8 @@ def get_programs():
 def get_planning_projects(
     program: Optional[str] = None,
     department: Optional[str] = None,
-    project_type: Optional[str] = None
+    project_type: Optional[str] = None,
+    participated_dept: Optional[str] = None
 ):
     """
     Get projects for Planning Dashboard.
@@ -99,6 +100,12 @@ def get_planning_projects(
         
         if project_type and project_type != "ALL":
              query = query.filter(LarkModelTP.project_type == project_type)
+        
+        if participated_dept and participated_dept != "ALL":
+             query = query.filter(
+                 LarkModelTP.participated_dept.ilike(f"%{participated_dept}%"),
+                 LarkModelTP.department != participated_dept
+             )
 
         tps = query.order_by(LarkModelTP.sort_order.asc()).all()
         
