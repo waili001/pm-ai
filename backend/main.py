@@ -64,7 +64,7 @@ def run_sync_jobs(force_full: bool = False):
         sync_lark_table(MEMBER_APP_TOKEN, MEMBER_TABLE_ID, LarkModelMember, force_full=force_full)
 
 # Import Startup Scripts
-from backend.scripts.migrate_db_rbac import migrate as run_db_migration
+from backend.scripts.db_migrations import run_all_migrations as run_db_migration
 from backend.scripts.init_rbac import init_rbac
 
 @asynccontextmanager
