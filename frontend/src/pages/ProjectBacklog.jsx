@@ -21,8 +21,15 @@ import {
     List,
     ListItem,
     ListItemButton,
-    ListItemText
+    ListItemText,
+    keyframes
 } from '@mui/material';
+
+const blink = keyframes`
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+`;
 import { parseJiraMarkup } from '../utils/jiraMarkup';
 import { JiraMarkupRenderer } from '../utils/JiraMarkupRenderer';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
@@ -388,7 +395,7 @@ export default function ProjectBacklog() {
                                                                                             const stats = {
                                                                                                 total: 0,
                                                                                                 done: 0,
-                                                                                                fe: { total: 0, done: 0 },
+                                                                                                fe: { total: 0, done: 0, open: 0 },
                                                                                                 be: { total: 0, done: 0 }
                                                                                             };
 
@@ -403,6 +410,7 @@ export default function ProjectBacklog() {
                                                                                                 if (comps.includes("TAD TAC UI")) {
                                                                                                     stats.fe.total++;
                                                                                                     if (isDone) stats.fe.done++;
+                                                                                                    if (t.status === "Open") stats.fe.open++;
                                                                                                 } else {
                                                                                                     stats.be.total++;
                                                                                                     if (isDone) stats.be.done++;
@@ -412,12 +420,39 @@ export default function ProjectBacklog() {
                                                                                             const fePct = stats.fe.total > 0 ? Math.round((stats.fe.done / stats.fe.total) * 100) : 0;
                                                                                             const bePct = stats.be.total > 0 ? Math.round((stats.be.done / stats.be.total) * 100) : 0;
 
+                                                                                            // Check Blinking Condition
+                                                                                            // BE = 100% (must have BE tasks), FE = 0% (must have FE tasks), All FE Status = Open
+                                                                                            const isBlinking = (
+                                                                                                stats.be.total > 0 && bePct === 100 &&
+                                                                                                stats.fe.total > 0 && fePct === 0 &&
+                                                                                                stats.fe.open === stats.fe.total
+                                                                                            );
+
+                                                                                            const blinkAnimation = {
+                                                                                                animation: isBlinking ? `blink 1.5s infinite` : 'none',
+                                                                                                '@keyframes blink': {
+                                                                                                    '0%': { opacity: 1 },
+                                                                                                    '50%': { opacity: 0.4 },
+                                                                                                    '100%': { opacity: 1 }
+                                                                                                }
+                                                                                            };
+
                                                                                             // Condition 1: Parent Finished (Inconsistent State Warning)
                                                                                             if (isParentFinished) {
                                                                                                 return (
                                                                                                     <Box sx={{ display: 'flex', gap: 0.5 }}>
                                                                                                         {stats.fe.total > 0 && stats.fe.done < stats.fe.total && (
-                                                                                                            <Chip label="FE Pending" size="small" color="error" sx={{ fontSize: '0.65rem', height: 20, fontWeight: 'bold' }} />
+                                                                                                            <Chip
+                                                                                                                label="FE Pending"
+                                                                                                                size="small"
+                                                                                                                color="error"
+                                                                                                                sx={{
+                                                                                                                    fontSize: '0.65rem',
+                                                                                                                    height: 20,
+                                                                                                                    fontWeight: 'bold',
+                                                                                                                    ...blinkAnimation
+                                                                                                                }}
+                                                                                                            />
                                                                                                         )}
                                                                                                         {stats.be.total > 0 && stats.be.done < stats.be.total && (
                                                                                                             <Chip label="BE Pending" size="small" color="error" sx={{ fontSize: '0.65rem', height: 20, fontWeight: 'bold' }} />
@@ -442,7 +477,12 @@ export default function ProjectBacklog() {
                                                                                                                 label={`FE: ${fePct}%`}
                                                                                                                 size="small"
                                                                                                                 color={fePct === 100 ? "success" : "warning"}
-                                                                                                                sx={{ fontSize: '0.65rem', height: 20, fontWeight: 'bold' }}
+                                                                                                                sx={{
+                                                                                                                    fontSize: '0.65rem',
+                                                                                                                    height: 20,
+                                                                                                                    fontWeight: 'bold',
+                                                                                                                    ...blinkAnimation
+                                                                                                                }}
                                                                                                             />
                                                                                                         )}
                                                                                                         {stats.be.total > 0 && (

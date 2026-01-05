@@ -332,17 +332,72 @@ def calculate_tp_completion(db: Session = None):
                 # If no tickets, technically completion is 0% or N/A. Let's set to 0.
                 new_percentage = 0
             else:
-                # 3. Count Closed Tickets
-                # Check status field. TCG has 'jira_status' too.
-                # Requirement: status 'Closed'
+                # 3. Partition into FE and BE
+                # Rule: Component contains "TAD TAC UI" -> FE, Else -> BE
+                fe_tickets = []
+                be_tickets = []
+                
+                for t in tickets:
+                    comps = t.components or ""
+                    if "TAD TAC UI" in comps:
+                        fe_tickets.append(t)
+                    else:
+                        be_tickets.append(t)
+
+                # 4. Calculate FE Stats
+                fe_total = len(fe_tickets)
+                new_fe_percentage = 0
+                new_fe_all_open = False
+                
+                if fe_total > 0:
+                    fe_closed = len([t for t in fe_tickets if t.jira_status == "Closed"])
+                    new_fe_percentage = int((fe_closed / fe_total) * 100)
+                    
+                    # Check if all are Open
+                    # Case sensitive check for "Open"
+                    fe_open_count = len([t for t in fe_tickets if t.jira_status == "Open"])
+                    if fe_open_count == fe_total:
+                        new_fe_all_open = True
+                else:
+                    # No FE tickets -> 0% progress, and technically "all open" is false or n/a? 
+                    # If no tasks, then the condition "frontend tasks completed % is 0 and status are all Open" 
+                    # might be implicitly true or false depending on interpretation.
+                    # If no tasks, % is 0. Status is N/A. Let's set 'all open' to False to avoid blinking if no tasks exist.
+                    new_fe_percentage = 0
+                    new_fe_all_open = False
+
+                # 5. Calculate BE Stats
+                be_total = len(be_tickets)
+                new_be_percentage = 0
+                if be_total > 0:
+                    be_closed = len([t for t in be_tickets if t.jira_status == "Closed"])
+                    new_be_percentage = int((be_closed / be_total) * 100)
+
+                
+                # 6. Overall Stats (Existing logic, kept consistent but maybe re-calculated from total)
                 closed_tickets = [t for t in tickets if t.jira_status == "Closed"]
                 closed_count = len(closed_tickets)
-                
                 new_percentage = int((closed_count / total_tickets) * 100)
             
-            # Update only if changed (optimization)
+            # Update fields
+            changed = False
             if tp.completed_percentage != new_percentage:
                 tp.completed_percentage = new_percentage
+                changed = True
+            
+            if tp.fe_completed_percentage != new_fe_percentage:
+                tp.fe_completed_percentage = new_fe_percentage
+                changed = True
+                
+            if tp.be_completed_percentage != new_be_percentage:
+                tp.be_completed_percentage = new_be_percentage
+                changed = True
+                
+            if tp.fe_status_all_open != new_fe_all_open:
+                tp.fe_status_all_open = new_fe_all_open
+                changed = True
+
+            if changed:
                 updates_count += 1
                 
         db.commit()

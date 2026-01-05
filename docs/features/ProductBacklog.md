@@ -19,6 +19,7 @@ Product Backlog 是一個看板 (Kanban) 介面，用於管理 TCG Tickets。使
             *   **[REFINEMENT]** 需區分 **FE** 與 **BE** 的進度 (例如: `FE: 50%`, `BE: 100%`)，以便清楚知道哪個端尚未完成。
             *   **[CONDITION]** 當 CR Ticket 狀態為 `In Progress` 時顯示進度。
             *   **[CONDITION]** 當 CR Ticket 狀態為 Finished (Resolved/Close) 但有未完成子任務時，顯示 `FE Pending` 或 `BE Pending` 標籤。
+            *   **[VISUAL]** 當 Backend Tasks 進度為 100% 且 Frontend Tasks 進度為 0% 且 Frontend Tasks 狀態皆為 `Open` 時，Frontend Task Chips 需有閃爍 (Blinking) 效果。
             *   CR Ticket 下可能包含多個 Dev Tickets。
         *   **Issue Type Color (類型顏色)**：
             *   需為不同的 Issue Type 設定不同的顯示顏色。

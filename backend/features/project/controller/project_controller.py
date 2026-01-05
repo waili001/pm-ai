@@ -143,6 +143,9 @@ def get_planning_projects(
                 "start_date": tp.start_date,
                 "sit_date": tp.sit_date,
                 "completed_percentage": tp.completed_percentage or 0, # Default to 0
+                "fe_completed_percentage": tp.fe_completed_percentage or 0,
+                "be_completed_percentage": tp.be_completed_percentage or 0,
+                "fe_status_all_open": tp.fe_status_all_open or False,
                 "sort_order": tp.sort_order or 0
             })
         

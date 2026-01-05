@@ -14,6 +14,9 @@ class LarkModelTP(Base):
     
     # Analysis Fields
     completed_percentage = Column(Integer) # Calculated field: Closed / Total Tickets * 100
+    fe_completed_percentage = Column(Integer, default=0)
+    be_completed_percentage = Column(Integer, default=0)
+    fe_status_all_open = Column(Boolean, default=False)
     sort_order = Column(Integer, default=0) # Kanban sort order
     
     current_completion = Column(Integer)
