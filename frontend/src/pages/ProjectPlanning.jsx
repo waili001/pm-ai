@@ -496,18 +496,18 @@ export default function ProjectPlanning() {
     };
 
     return (
-        <Box sx={{ p: 3, height: '100%' }}>
+        <Box sx={{ p: 0, height: '100%' }}>
             {/* Header / Filters */}
             <Paper sx={{ p: 2, mb: 3 }}>
                 <Grid container spacing={2} alignItems="center">
                     {/* Program Filter - 1st Position */}
                     <Grid size={{ xs: 12, md: 2 }}>
-                        <Box sx={{ minWidth: 100, maxWidth: 200 }}>
+                        <Box sx={{ minWidth: 100, maxWidth: '100%' }}>
                             <Autocomplete
                                 options={programsList}
                                 renderInput={(params) => <TextField {...params} label="Program" />}
                                 value={program}
-                                onChange={(e, newVal) => setProgram(newVal)}
+                                onChange={(e, newVal) => setProgram(newVal || "ALL")}
                                 freeSolo
                             />
                         </Box>
@@ -520,7 +520,7 @@ export default function ProjectPlanning() {
                                 options={departmentsList}
                                 renderInput={(params) => <TextField {...params} label="Department" />}
                                 value={department}
-                                onChange={(e, newVal) => setDepartment(newVal)}
+                                onChange={(e, newVal) => setDepartment(newVal || "ALL")}
                                 freeSolo
                             />
                         </Box>
@@ -544,7 +544,7 @@ export default function ProjectPlanning() {
                         </FormControl>
                     </Grid>
 
-                    <Grid size={{ xs: 12, md: 2 }} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Grid size={{ xs: 12, md: 2 }} >
                         <ToggleButtonGroup
                             value={viewMode}
                             exclusive

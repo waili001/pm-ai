@@ -5,9 +5,9 @@
 *   **新增一個 Menu**：`Project Planning` ，顯示在 Home 下面 且 Product Backlog 上方 的位置。 
 *   **定義**：TP 就是指 Project
 *   **頁面頂部過濾器**：
-    *   選擇 Program (New) - **First Option**
-    *   選擇部門 (`Department`)
-    *   選擇 Project Type (`ALL` / `Tech` / `Integration` / `ICR` / `Project`)
+    *   選擇 Program (New) - **First Option** (Default: `ALL`, Empty input reverts to `ALL`)
+    *   選擇部門 (`Department`) (Default: `ALL`, Empty input reverts to `ALL`)
+    *   選擇 Project Type (`ALL` / `Tech` / `Integration` / `ICR` / `Project`) (Default: `ALL`)
     *   檢視模式切換：`Kanban` 或 `Gantt` (甘特圖)
 
 ### View Logic

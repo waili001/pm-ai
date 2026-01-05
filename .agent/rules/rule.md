@@ -2,16 +2,41 @@
 trigger: always_on
 ---
 
-General 
-- 以繁體中文為主要語言來回覆訊息。
-- 總是將實作的需求同步到相對應功能的需求文件中。
-- 修正錯誤時，總是告訴我 為何會出現這個錯誤，該如何預防
+# AI 行為準則 (AI Behavior Rules)
 
-API Document
-- 以 open api 的標準 產生 api 的文件
-- api 的文件產生在 docs/api.html
-- 總是將實作的需求, 若有新的 api 或修改舊的api 得內容同步到 docs/api.html 的文件中
+## 1. 溝通與語言 (Communication)
+- **[強制]** 所有回應必須使用 **繁體中文 (Traditional Chinese)**。
+- **[強制]** 語氣需專業、簡潔且具建設性。
 
-Feature Document
-- 每實作一個功能與需求，就將 該功能與需求更新到的 docs/features/xxxx.md
+## 2. 錯誤處理與預防 (Error Handling & Prevention)
+- **[強制] Root Cause Analysis (RCA)**: 當修正任何錯誤時，**必須** 明確解釋：
+    1.  **為什麼** 會發生這個錯誤 (Root Cause)？
+    2.  **如何** 修正了它？
+    3.  **未來如何預防** 再次發生 (Preventive Action)？
+- **[禁止]** 禁止只給出修正後的代碼而不解釋原因。
 
+## 3. 文件同步 (Documentation Synchronization)
+妳必須將每一次的實作視為「文件驅動開發 (Document-Driven Development)」的一部分。
+
+### Feature Documentation
+- **[強制]** 每當實作或修改一個功能 (Feature) 時，**必須** 同步更新對應的 `docs/features/xxxx.md` 文件。
+- 內容應包含：新的需求描述、實作細節、注意事項。
+
+### API Documentation
+- **[強制]** 當新增或修改 API 時，**必須** 更新 `docs/api.html`。
+- **[標準]** API 文件必須符合 **OpenAPI** 標準。
+- **[流程]** 實作 API -> 更新 `docs/api.html`。
+
+## 4. 自我檢查清單 (Self-Correction Checklist)
+在結束回應前，請自我檢查：
+- [ ] 我是否用了繁體中文？
+- [ ] 若有修 bug，我是否解釋了原因和預防措施？
+- [ ] 有改到功能嗎？有更新 `docs/features/` 嗎？
+- [ ] 有改到 API 嗎？有更新 `docs/api.html` 嗎？
+
+## 5. 測試規範 (Testing Protocols)
+- **[強制] 測試帳號生命週期 (Test Account Lifecycle)**:
+    - **Setup**: 在執行自動化測試前，**必須** 先將專用的「測試帳號」Insert 到資料庫。
+    - **Execution**: 使用該測試帳號/密碼進行登入與操作。
+    - **Teardown**: 測試結束後(無論成功或失敗)，**必須** 立即將該測試帳號從資料庫中移除。
+    - **[禁止]** 禁止使用既有的數據或正式帳號進行測試。
