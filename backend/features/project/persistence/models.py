@@ -84,6 +84,10 @@ class TicketAnomaly(Base):
     anomaly_reason = Column(String)
     detected_at = Column(BigInteger) # Timestamp ms
 
+    # New Fields (2024-01-06)
+    components = Column(Text)
+    department = Column(Text)
+
     # Legacy / Unused fields (Kept temporarily or if needed for other logic)
     status = Column(String) 
     product = Column(String)

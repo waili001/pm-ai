@@ -105,6 +105,8 @@ class AnomalyService:
             assignee=p.assignee,
             parent_status=p.jira_status,
             anomaly_reason=reason,
-            detected_at=timestamp
+            detected_at=timestamp,
+            components=p.components,
+            department=p.department
         )
         self.db.add(anomaly)

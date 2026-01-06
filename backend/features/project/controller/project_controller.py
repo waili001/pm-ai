@@ -317,13 +317,19 @@ def get_departments():
         db.close()
 
 @router.get("/anomalies")
-def get_ticket_anomalies():
+def get_ticket_anomalies(department: Optional[str] = None):
     """
     Get all detected ticket anomalies.
+    Optional Filter: department
     """
     db = SessionLocal()
     try:
-        anomalies = db.query(TicketAnomaly).order_by(TicketAnomaly.detected_at.desc()).all()
+        query = db.query(TicketAnomaly)
+        
+        if department:
+            query = query.filter(TicketAnomaly.department == department)
+            
+        anomalies = query.order_by(TicketAnomaly.detected_at.desc()).all()
         return anomalies
     finally:
         db.close()

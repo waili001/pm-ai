@@ -15,7 +15,11 @@ import {
     Chip,
     Button,
     CircularProgress,
-    Alert
+    Alert,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel
 } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -29,6 +33,10 @@ const TicketAnomaly = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    // Filter State
+    const [departments, setDepartments] = useState([]);
+    const [selectedDepartment, setSelectedDepartment] = useState('');
+
     // Detail Dialog State
     const [detailOpen, setDetailOpen] = useState(false);
     const [selectedTicketDetail, setSelectedTicketDetail] = useState(null);
@@ -38,7 +46,12 @@ const TicketAnomaly = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await authenticatedFetch('/api/project/anomalies');
+            let url = '/api/project/anomalies';
+            if (selectedDepartment) {
+                url += `?department=${encodeURIComponent(selectedDepartment)}`;
+            }
+
+            const response = await authenticatedFetch(url);
             if (response.ok) {
                 const data = await response.json();
                 setAnomalies(data);
@@ -53,9 +66,25 @@ const TicketAnomaly = () => {
         }
     };
 
+    const fetchDepartments = async () => {
+        try {
+            const res = await authenticatedFetch('/api/project/departments');
+            if (res.ok) {
+                const data = await res.json();
+                setDepartments(data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch departments", err);
+        }
+    };
+
+    useEffect(() => {
+        fetchDepartments();
+    }, []);
+
     useEffect(() => {
         fetchAnomalies();
-    }, []);
+    }, [selectedDepartment]); // Re-fetch when filter changes
 
     const handleTicketClick = async (ticketNumber) => {
         setDetailOpen(true);
@@ -90,14 +119,33 @@ const TicketAnomaly = () => {
                     <WarningAmberIcon color="warning" sx={{ fontSize: 40 }} />
                     Ticket Anomalies
                 </Typography>
-                <Button
-                    startIcon={<RefreshIcon />}
-                    variant="outlined"
-                    onClick={fetchAnomalies}
-                    disabled={loading}
-                >
-                    Refresh
-                </Button>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                        <InputLabel>Department</InputLabel>
+                        <Select
+                            value={selectedDepartment}
+                            label="Department"
+                            onChange={(e) => setSelectedDepartment(e.target.value)}
+                        >
+                            <MenuItem value="">
+                                <em>All Departments</em>
+                            </MenuItem>
+                            {departments.map((dept) => (
+                                <MenuItem key={dept} value={dept}>
+                                    {dept}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <Button
+                        startIcon={<RefreshIcon />}
+                        variant="outlined"
+                        onClick={fetchAnomalies}
+                        disabled={loading}
+                    >
+                        Refresh
+                    </Button>
+                </Box>
             </Box>
 
             {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
