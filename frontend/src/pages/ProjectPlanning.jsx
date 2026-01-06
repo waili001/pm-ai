@@ -32,6 +32,7 @@ import Xrange from 'highcharts/modules/xrange';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useNavigate } from 'react-router-dom';
 import { authenticatedFetch } from '../utils/api';
+import DepartmentSelector from '../components/DepartmentSelector';
 
 // Helper to format due day
 const formatDueDay = (val) => {
@@ -90,17 +91,11 @@ export default function ProjectPlanning() {
 
     // Data Lists
     const [programsList, setProgramsList] = useState([]);
-    const [departmentsList, setDepartmentsList] = useState([]);
+    // const [departmentsList, setDepartmentsList] = useState([]); // REMOVED
 
     // Fetch filters options on mount
     useEffect(() => {
-        // Fetch Departments
-        authenticatedFetch('/api/project/departments')
-            .then(res => res.json())
-            .then(data => {
-                setDepartmentsList(["ALL", ...data]);
-            })
-            .catch(err => console.error("Error fetching departments:", err));
+        // Fetch Departments (Handled by DepartmentSelector)
 
         // Fetch Programs
         authenticatedFetch('/api/project/programs')
@@ -518,11 +513,10 @@ export default function ProjectPlanning() {
                     {/* Department Filter - 2nd Position */}
                     <Grid size={{ xs: 12, md: 1 }}>
                         <Box sx={{ minWidth: 100, maxWidth: '100%' }}>
-                            <Autocomplete
-                                options={departmentsList}
-                                renderInput={(params) => <TextField {...params} label="Department" />}
+                            <DepartmentSelector
+                                label="Department"
                                 value={department}
-                                onChange={(e, newVal) => setDepartment(newVal || "ALL")}
+                                onChange={(newVal) => setDepartment(newVal || "ALL")}
                                 freeSolo
                             />
                         </Box>
@@ -531,11 +525,10 @@ export default function ProjectPlanning() {
                     {/* Participated Dept Filter - 3rd Position */}
                     <Grid size={{ xs: 12, md: 1 }}>
                         <Box sx={{ minWidth: 100, maxWidth: '100%' }}>
-                            <Autocomplete
-                                options={departmentsList}
-                                renderInput={(params) => <TextField {...params} label="Participated Dept" />}
+                            <DepartmentSelector
+                                label="Participated Dept"
                                 value={participatedDept}
-                                onChange={(e, newVal) => setParticipatedDept(newVal || "ALL")}
+                                onChange={(newVal) => setParticipatedDept(newVal || "ALL")}
                                 freeSolo
                             />
                         </Box>

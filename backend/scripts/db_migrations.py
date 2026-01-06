@@ -70,12 +70,32 @@ def migrate_tp_projects(conn):
     except Exception as e:
         logger.error(f"TP Projects Extended Migration failed: {e}")
 
+def migrate_ticket_anomalies(conn):
+    """Ensure Ticket Anomaly columns exist."""
+    try:
+        result = conn.execute(text("PRAGMA table_info(ticket_anomalies)"))
+        columns = [row.name for row in result]
+        
+        if 'components' not in columns:
+            logger.info("Adding 'components' column to 'ticket_anomalies' table...")
+            conn.execute(text("ALTER TABLE ticket_anomalies ADD COLUMN components TEXT"))
+            logger.info("Column 'components' added successfully.")
+            
+        if 'department' not in columns:
+            logger.info("Adding 'department' column to 'ticket_anomalies' table...")
+            conn.execute(text("ALTER TABLE ticket_anomalies ADD COLUMN department TEXT"))
+            logger.info("Column 'department' added successfully.")
+
+    except Exception as e:
+        logger.error(f"Ticket Anomaly Migration failed: {e}")
+
 def run_all_migrations():
     """Run all database migrations."""
     logger.info("--- Starting Database Migrations ---")
     with engine.connect() as conn:
         migrate_rbac(conn)
         migrate_tp_projects(conn)
+        migrate_ticket_anomalies(conn)
         conn.commit()
     logger.info("--- Database Migrations Completed ---")
 

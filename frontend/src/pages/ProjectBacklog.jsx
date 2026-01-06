@@ -35,6 +35,7 @@ import { JiraMarkupRenderer } from '../utils/JiraMarkupRenderer';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { authenticatedFetch } from '../utils/api';
 import TicketDetailModal from '../components/TicketDetailModal';
+import DepartmentSelector from '../components/DepartmentSelector';
 
 const STATUS_ORDER = ["Open", "To Do", "In Progress", "Resolved", "Scheduled", "Closed"]; // Removed In Review
 
@@ -46,11 +47,10 @@ const DEPT_STORAGE_KEY = 'project_backlog_selected_dept';
 export default function ProjectBacklog() {
     const [activeTPs, setActiveTPs] = useState([]);
     const [selectedTP, setSelectedTP] = useState(null);
-    // Initialize from Storage or default to "ALL"
     const [selectedDepartment, setSelectedDepartment] = useState(() => {
         return localStorage.getItem(DEPT_STORAGE_KEY) || "ALL";
     });
-    const [departmentsList, setDepartmentsList] = useState(["ALL"]); // List from API
+    // const [departmentsList, setDepartmentsList] = useState(["ALL"]); // REMOVED
     const [tickets, setTickets] = useState([]);
     const [loadingTPs, setLoadingTPs] = useState(false);
     const [loadingTickets, setLoadingTickets] = useState(false);
@@ -87,16 +87,6 @@ export default function ProjectBacklog() {
             return updated;
         });
     };
-
-    // Fetch Departments on Mount
-    useEffect(() => {
-        authenticatedFetch('/api/project/departments')
-            .then(res => res.json())
-            .then(data => {
-                setDepartmentsList(["ALL", ...data]);
-            })
-            .catch(err => console.error("Error fetching departments:", err));
-    }, []);
 
     // Fetch Active TPs on Mount
     useEffect(() => {
@@ -257,25 +247,17 @@ export default function ProjectBacklog() {
                 <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                         <Box sx={{ minWidth: '250px' }}>
-                            <Autocomplete
+                            <DepartmentSelector
                                 fullWidth
-                                options={departmentsList}
                                 value={selectedDepartment}
-                                onChange={(event, newValue) => {
+                                onChange={(newValue) => {
                                     const val = newValue || "ALL";
                                     setSelectedDepartment(val);
                                     localStorage.setItem(DEPT_STORAGE_KEY, val);
                                     setSelectedTP(null);
                                 }}
                                 disableClearable
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        label="Select Department"
-                                        variant="outlined"
-                                        helperText="Filter TPs by Dept"
-                                    />
-                                )}
+                                helperText="Filter TPs by Dept"
                             />
                         </Box>
                         <Box sx={{ flexGrow: 1, minWidth: '300px' }}>
