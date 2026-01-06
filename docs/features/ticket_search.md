@@ -5,7 +5,9 @@
 ## 功能規格
 
 ### 1. 搜尋功能 (Search)
-*   **入口**: 側邊欄 "Ticket Search" 選單。 (需具備 `TICKET_SEARCH` 權限)
+*   **入口**: 
+    1. 側邊欄 "Ticket Search" 選單。
+    2. **頂部導航欄 (Top Navigation Bar)**: 位於右上角 User Avatar 左側的全域搜尋框。
 *   **操作**: 在搜尋框輸入 Ticket Number (例如 `TCG-125906` 或 `TP-4707`) 並按下 Enter 或搜尋按鈕。
 *   **大小寫轉換**: 系統會自動將輸入的搜尋字串轉換為大寫。
 *   **搜尋歷史 (Search History)**:

@@ -94,7 +94,55 @@ export default function Layout() {
 
                     <Box sx={{ flexGrow: 1 }} />
 
+
                     <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center', gap: 2 }}>
+                        {/* Global Ticket Search Bar */}
+                        {hasPermission('TICKET_SEARCH') && (
+                            <Box sx={{
+                                position: 'relative',
+                                borderRadius: 1,
+                                bgcolor: 'rgba(255, 255, 255, 0.15)',
+                                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.25)' },
+                                mr: 2,
+                                width: '100%',
+                                maxWidth: '250px',
+                                display: { xs: 'none', sm: 'block' }
+                            }}>
+                                <input
+                                    placeholder="Search (e.g. TCG-123)..."
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            const term = e.target.value.trim();
+                                            if (term) {
+                                                navigate(`/ticket-search?q=${encodeURIComponent(term)}`);
+                                                e.target.value = ''; // clear after search
+                                            }
+                                        }
+                                    }}
+                                    style={{
+                                        color: 'inherit',
+                                        padding: '8px 8px 8px 40px',
+                                        border: 'none',
+                                        width: '100%',
+                                        background: 'transparent',
+                                        outline: 'none',
+                                        color: 'white'
+                                    }}
+                                />
+                                <Box sx={{
+                                    position: 'absolute',
+                                    left: 10,
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    pointerEvents: 'none',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}>
+                                    <SearchIcon sx={{ color: 'white' }} />
+                                </Box>
+                            </Box>
+                        )}
+
                         <Tooltip title="Open settings">
                             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                                 <Avatar alt={user.username} src="/static/images/avatar/2.jpg">

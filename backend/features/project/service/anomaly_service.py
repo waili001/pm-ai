@@ -37,28 +37,28 @@ class AnomalyService:
     def _detect_anomalies_for_tp(self, tp: LarkModelTP, timestamp: int):
         # Target Parent Issue Types
         target_issue_types = ["Change Request", "Improvement"]
-        # Target Parent Status
-        target_parent_statuses = ["Open"] 
-        
-        # Child "Active" Statuses
+        # Rule 1 Active Children Statuses (Open Parent)
         active_child_statuses = [
             "In Progress", "Development", "Testing", 
             "In Review", "Review", 
             "Resolved", 
             "Done", "Closed"
         ]
+        
+        # Rule 2 Inactive Children Statuses (In Progress Parent) -> Check if ALL are in this list
+        inactive_child_statuses = ["Resolved", "Done", "Closed"]
 
-        # Query Potential Anomalous Parents
-        # Must belong to this TP, be one of the types, and be Open.
+        # Query Potential Parents (Open OR In Progress)
+        target_statuses = ["Open", "In Progress"]
+        
         parents = self.db.query(LarkModelTCG).filter(
             LarkModelTCG.tp_number == tp.ticket_number,
             LarkModelTCG.issue_type.in_(target_issue_types),
-            LarkModelTCG.jira_status.in_(target_parent_statuses)
+            LarkModelTCG.jira_status.in_(target_statuses)
         ).all()
 
         for p in parents:
             # check children
-            # Optimization: could be better, but N+1 safe for background job
             children = self.db.query(LarkModelTCG).filter(
                 LarkModelTCG.parent_tickets.ilike(f"%{p.tcg_tickets}%")
             ).all()
@@ -66,29 +66,45 @@ class AnomalyService:
             if not children:
                 continue
 
-            has_active_child = False
-            active_child_info = []
+            c_statuses = [(c.jira_status or "").strip() for c in children]
+            parent_status = (p.jira_status or "").strip()
 
-            for c in children:
-                c_status = (c.jira_status or "").strip()
-                # Check fuzzy match or exact match depending on data cleanliness
-                # Here we check exact match against the list
-                if c_status in active_child_statuses:
-                    has_active_child = True
-                    active_child_info.append(f"{c.tcg_tickets}({c_status})")
-                    break # As per requirement "Any child"
+            # --- Rule 1: Parent Open but Child Active ---
+            if parent_status == "Open":
+                has_active_child = False
+                active_child_info = []
+                for c in children:
+                    c_status = (c.jira_status or "").strip()
+                    if c_status in active_child_statuses:
+                        has_active_child = True
+                        active_child_info.append(f"{c.tcg_tickets}({c_status})")
+                
+                if has_active_child:
+                    reason = f"Parent is Open but has active child: {', '.join(active_child_info)}"
+                    self._create_anomaly(p, tp, reason, timestamp)
 
-            if has_active_child:
-                # Found Anomaly
-                reason = f"Parent is Open but has active child: {', '.join(active_child_info)}"
-                anomaly = TicketAnomaly(
-                    ticket_number=p.tcg_tickets,
-                    ticket_title=p.title,
-                    tp_number=p.tp_number,
-                    tp_title=tp.title,
-                    assignee=p.assignee,
-                    parent_status=p.jira_status,
-                    anomaly_reason=reason,
-                    detected_at=timestamp
-                )
-                self.db.add(anomaly)
+            # --- Rule 2: Parent In Progress but Child InActive ---
+            elif parent_status == "In Progress":
+                # Check if ALL children are inactive
+                all_inactive = True
+                for c_status in c_statuses:
+                    if c_status not in inactive_child_statuses:
+                        all_inactive = False
+                        break
+                
+                if all_inactive:
+                    reason = "Parent is In Progress but all children are InActive (Closed/Done)."
+                    self._create_anomaly(p, tp, reason, timestamp)
+
+    def _create_anomaly(self, p, tp, reason, timestamp):
+        anomaly = TicketAnomaly(
+            ticket_number=p.tcg_tickets,
+            ticket_title=p.title,
+            tp_number=p.tp_number,
+            tp_title=tp.title,
+            assignee=p.assignee,
+            parent_status=p.jira_status,
+            anomaly_reason=reason,
+            detected_at=timestamp
+        )
+        self.db.add(anomaly)

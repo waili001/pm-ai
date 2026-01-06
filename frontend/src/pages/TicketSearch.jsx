@@ -19,6 +19,8 @@ import HistoryIcon from '@mui/icons-material/History';
 import { authenticatedFetch } from '../utils/api';
 import { jiraToHtml } from '../utils/jiraFormatter';
 
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+
 const TicketSearch = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [ticketData, setTicketData] = useState(null);
@@ -26,6 +28,7 @@ const TicketSearch = () => {
     const [error, setError] = useState(null);
     const [searched, setSearched] = useState(false);
     const [searchHistory, setSearchHistory] = useState([]);
+    const [searchParams, setSearchParams] = useSearchParams();
 
     // Load history and last search on mount
     useEffect(() => {
@@ -34,21 +37,26 @@ const TicketSearch = () => {
             const history = JSON.parse(localStorage.getItem('ticketSearchHistory') || '[]');
             setSearchHistory(history);
 
-            // Load Last Search Data (Optional, but user asked for "persistence")
-            // The requirement was "Store ticket info... next time display the last time search result"
-            const savedData = localStorage.getItem('lastTicketSearch');
-            if (savedData) {
-                const parsed = JSON.parse(savedData);
-                if (parsed.ticketData && parsed.searchTerm) {
-                    setTicketData(parsed.ticketData);
-                    setSearchTerm(parsed.searchTerm);
-                    setSearched(true);
+            // Check URL params first
+            const queryParam = searchParams.get('q');
+            if (queryParam) {
+                handleSearch(queryParam);
+            } else {
+                // Load Last Search Data if no query param
+                const savedData = localStorage.getItem('lastTicketSearch');
+                if (savedData) {
+                    const parsed = JSON.parse(savedData);
+                    if (parsed.ticketData && parsed.searchTerm) {
+                        setTicketData(parsed.ticketData);
+                        setSearchTerm(parsed.searchTerm);
+                        setSearched(true);
+                    }
                 }
             }
         } catch (e) {
             console.error("Failed to load local storage data", e);
         }
-    }, []);
+    }, [searchParams]); // Depend on searchParams
 
     const updateHistory = (term) => {
         const cleanTerm = term.trim().toUpperCase();

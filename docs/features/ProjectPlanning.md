@@ -6,6 +6,7 @@
 *   **定義**：TP 就是指 Project
 *   **頁面頂部過濾器**：
     *   選擇 Program (New) - **First Option** (Default: `ALL`, Empty input reverts to `ALL`)
+    *   **排除狀態**：Jira Status 為 `Blocked` 的 TP 不會顯示。
     *   選擇部門 (`Department`) (Default: `ALL`, Empty input reverts to `ALL`)
     *   選擇參與部門 (`Participated Dept`) (Default: `ALL`)
     *   選擇 Project Type (`ALL` / `Tech` / `Integration` / `ICR` / `Project`) (Default: `ALL`)

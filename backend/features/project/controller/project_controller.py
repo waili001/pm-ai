@@ -73,10 +73,11 @@ def get_planning_projects(
       - Program: Filter by TP ticket numbers found in TP_PROGRAM for the given title.
       - Department/Type: Direct filter.
       - Closed projects: Hide if older than 4 months.
+      - Blocked projects: Exclude projects with jira_status == 'Blocked'.
     """
     db = SessionLocal()
     try:
-        query = db.query(LarkModelTP)
+        query = db.query(LarkModelTP).filter(LarkModelTP.jira_status != "Blocked")
 
         # 1. Program Filter (First Priority)
         if program and program != "ALL":

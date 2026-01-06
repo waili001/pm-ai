@@ -142,7 +142,11 @@ const TicketAnomaly = () => {
                                                     label={row.ticket_number}
                                                     color="primary"
                                                     variant="outlined"
-                                                    sx={{ fontWeight: 'bold', pointerEvents: 'none' }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        window.open(`https://jira.tc-gaming.com/browse/${row.ticket_number}`, '_blank');
+                                                    }}
+                                                    sx={{ fontWeight: 'bold', cursor: 'pointer' }}
                                                 />
                                             </TableCell>
                                             <TableCell sx={{ maxWidth: 300 }}>

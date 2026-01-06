@@ -16,6 +16,14 @@
     *   **任一**子單狀態為：`In Progress`, `In Review`, `Resolved`, `Done`, `Closed`, `Development`, `Testing`, `Review`。
 *   **Anomaly Reason**: "Parent is Open but has active children."
 
+### Rule 2: Parent In Progress but Child InActive
+*   **Target (Parent)**:
+    *   `jira_status`: "In Progress"
+*   **Condition (Child)**:
+    *   擁有至少一個子單 (Dev Task)。
+    *   **所有**子單狀態皆為：`Closed`, `Resolved`, `Done`。 (即沒有 `Open`, `To Do`, `In Progress`, `Development`, `Testing`, `In Review`, `Review`)
+*   **Anomaly Reason**: "Parent is In Progress but all children are InActive (Closed/Done)."
+
 ## UI Requirements
 *   **Unique Page**: `/ticket-anomaly`
 *   **Table Columns**:

@@ -83,7 +83,7 @@
                     "/api/project/planning": {
                         "get": {
                             "summary": "Get Project Planning Data",
-                            "description": "Fetch projects for Planning Dashboard with optional filtering.",
+                            "description": "Fetch projects for Planning Dashboard with optional filtering. Projects with 'Blocked' status are excluded.",
                             "parameters": [
                                 {
                                     "name": "program",
@@ -200,6 +200,38 @@
                             },
                             "responses": {
                                 "200": { "description": "Success" }
+                            }
+                        }
+                    },
+                    "/api/project/anomalies": {
+                        "get": {
+                            "summary": "Get Ticket Anomalies",
+                            "description": "Fetch list of detected ticket anomalies.",
+                            "responses": {
+                                "200": {
+                                    "description": "List of anomalies",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": { "type": "integer" },
+                                                        "ticket_number": { "type": "string" },
+                                                        "ticket_title": { "type": "string" },
+                                                        "tp_number": { "type": "string" },
+                                                        "tp_title": { "type": "string" },
+                                                        "assignee": { "type": "string" },
+                                                        "parent_status": { "type": "string" },
+                                                        "anomaly_reason": { "type": "string" },
+                                                        "detected_at": { "type": "integer" }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
