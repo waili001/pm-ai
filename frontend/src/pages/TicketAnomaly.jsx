@@ -144,7 +144,7 @@ const TicketAnomaly = () => {
                                                     variant="outlined"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        window.open(`https://jira.tc-gaming.com/browse/${row.ticket_number}`, '_blank');
+                                                        window.open(`https://jira.tc-gaming.co/jira/browse/${row.ticket_number}`, '_blank');
                                                     }}
                                                     sx={{ fontWeight: 'bold', cursor: 'pointer' }}
                                                 />

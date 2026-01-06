@@ -34,6 +34,7 @@ import { parseJiraMarkup } from '../utils/jiraMarkup';
 import { JiraMarkupRenderer } from '../utils/JiraMarkupRenderer';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { authenticatedFetch } from '../utils/api';
+import TicketDetailModal from '../components/TicketDetailModal';
 
 const STATUS_ORDER = ["Open", "To Do", "In Progress", "Resolved", "Scheduled", "Closed"]; // Removed In Review
 
@@ -540,119 +541,12 @@ export default function ProjectBacklog() {
             </Box>
 
             {/* Ticket Detail Dialog */}
-            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-                <DialogTitle>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                            {selectedTicket?.ticket_number}
-                            <Chip
-                                label={selectedTicket?.issue_type}
-                                size="small"
-                                color={getIssueTypeColor(selectedTicket?.issue_type)}
-                                variant={getIssueTypeColor(selectedTicket?.issue_type) === 'default' ? "outlined" : "filled"}
-                            />
-                        </Box>
-                        <Chip
-                            label={selectedTicket?.status}
-                            color={getStatusColor(selectedTicket?.status)}
-                            size="small"
-                        />
-                    </Box>
-                </DialogTitle>
-                <DialogContent dividers sx={{
-                    scrollbarWidth: 'none',
-                    '&::-webkit-scrollbar': { display: 'none' }
-                }}>
-                    <Typography variant="h6" gutterBottom>
-                        {selectedTicket?.title}
-                    </Typography>
-
-                    <Grid container spacing={2} sx={{ mb: 2 }}>
-                        <Grid item xs={6}>
-                            <Typography variant="caption" color="text.secondary">Assignee</Typography>
-                            <Typography variant="body1">{selectedTicket?.assignee || "-"}</Typography>
-                        </Grid>
-                        <Grid item xs={6}>
-                            <Typography variant="caption" color="text.secondary">Reporter</Typography>
-                            <Typography variant="body1">{selectedTicket?.reporter || "-"}</Typography>
-                        </Grid>
-                    </Grid>
-
-                    <Divider sx={{ my: 1 }} />
-
-                    <Typography variant="caption" color="text.secondary" gutterBottom>
-                        Description
-                    </Typography>
-                    <JiraMarkupRenderer text={selectedTicket?.description} />
-
-                </DialogContent>
-                {selectedTicket?.childTasks && selectedTicket.childTasks.length > 0 && (
-                    <Box sx={{ p: 2, bgcolor: '#f9f9f9', borderTop: '1px solid #e0e0e0' }}>
-                        <Typography variant="subtitle2" gutterBottom>
-                            Sub Tasks
-                        </Typography>
-                        <Box sx={{
-                            maxHeight: 200,
-                            overflowY: 'auto',
-                            scrollbarWidth: 'none',
-                            '&::-webkit-scrollbar': { display: 'none' }
-                        }}>
-                            <List dense>
-                                {[...selectedTicket.childTasks].sort((a, b) => {
-                                    const getStatusWeight = (status) => {
-                                        const s = (status || "").toLowerCase();
-                                        if (s === "open" || s === "to do") return 1;
-                                        if (s === "in progress") return 2;
-                                        if (s === "in review") return 3;
-                                        if (["resolved", "scheduled", "done", "closed"].includes(s)) return 4;
-                                        return 5; // Unknown
-                                    };
-                                    return getStatusWeight(a.status) - getStatusWeight(b.status);
-                                }).map(child => (
-                                    <ListItem key={child.ticket_number} disablePadding sx={{ py: 0.5 }}>
-                                        <Grid container alignItems="center" spacing={1}>
-                                            <Grid item xs={3}>
-                                                <Link
-                                                    href={`https://jira.tc-gaming.co/jira/browse/${child.ticket_number}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    underline="hover"
-                                                    sx={{ fontSize: '0.85rem' }}
-                                                >
-                                                    {child.ticket_number}
-                                                </Link>
-                                            </Grid>
-                                            <Grid item xs={5}>
-                                                <Typography variant="body2" noWrap title={child.title}>
-                                                    {child.title}
-                                                </Typography>
-                                            </Grid>
-                                            <Grid item xs={2}>
-                                                <Typography variant="caption" display="block">
-                                                    {child.assignee}
-                                                </Typography>
-                                            </Grid>
-                                            <Grid item xs={2}>
-                                                <Chip
-                                                    label={child.status}
-                                                    size="small"
-                                                    color={getStatusColor(child.status)}
-                                                    variant="outlined"
-                                                    sx={{ height: 16, fontSize: '0.65rem' }}
-                                                />
-                                            </Grid>
-                                        </Grid>
-                                    </ListItem>
-                                ))}
-                            </List>
-                        </Box>
-                    </Box>
-                )}
-
-                <DialogActions>
-                    <Button onClick={handleCloseDialog}>Close</Button>
-                </DialogActions>
-            </Dialog>
+            {/* Ticket Detail Dialog */}
+            <TicketDetailModal
+                open={openDialog}
+                onClose={handleCloseDialog}
+                ticket={selectedTicket}
+            />
 
         </Box>
     );

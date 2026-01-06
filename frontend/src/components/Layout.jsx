@@ -35,6 +35,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { authenticatedFetch } from '../utils/api';
+import TicketDetailModal from './TicketDetailModal';
 
 const drawerWidth = 240;
 
@@ -45,6 +46,10 @@ export default function Layout() {
 
     const [anchorElUser, setAnchorElUser] = useState(null);
     const [user, setUser] = useState({ username: 'User', permissions: [], is_super_admin: false });
+
+    // Search Modal State
+    const [searchModalOpen, setSearchModalOpen] = useState(false);
+    const [searchedTicket, setSearchedTicket] = useState(null);
 
     useEffect(() => {
         // Fetch User Info & Permissions
@@ -110,12 +115,30 @@ export default function Layout() {
                             }}>
                                 <input
                                     placeholder="Search (e.g. TCG-123)..."
-                                    onKeyDown={(e) => {
+                                    onKeyDown={async (e) => {
                                         if (e.key === 'Enter') {
                                             const term = e.target.value.trim();
                                             if (term) {
-                                                navigate(`/ticket-search?q=${encodeURIComponent(term)}`);
-                                                e.target.value = ''; // clear after search
+                                                // navigate(`/ticket-search?q=${encodeURIComponent(term)}`);
+                                                // New Requirement: Open Modal
+                                                try {
+                                                    const res = await authenticatedFetch(`/api/project/ticket/${term.toUpperCase()}`);
+                                                    if (res.ok) {
+                                                        const data = await res.json();
+                                                        if (data) {
+                                                            setSearchedTicket(data);
+                                                            setSearchModalOpen(true);
+                                                            e.target.value = ''; // clear
+                                                        } else {
+                                                            alert("Ticket not found");
+                                                        }
+                                                    } else {
+                                                        alert("Ticket not found or error occurred");
+                                                    }
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    alert("Search failed");
+                                                }
                                             }
                                         }
                                     }}
@@ -353,6 +376,12 @@ export default function Layout() {
                 <Toolbar />
                 <Outlet />
             </Box>
+
+            <TicketDetailModal
+                open={searchModalOpen}
+                onClose={() => setSearchModalOpen(false)}
+                ticket={searchedTicket}
+            />
         </Box >
     );
 }

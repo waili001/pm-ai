@@ -256,6 +256,18 @@ def get_ticket_details(ticket_number: str):
             # Sort by ticket number
             sub_tasks_details.sort(key=lambda x: x["ticket_number"])
 
+            # 2024-01-06 Enhancement: Fetch TP Info
+            tp_info = None
+            if tcg.tp_number:
+                 tp_model = db.query(LarkModelTP).filter(LarkModelTP.ticket_number == tcg.tp_number).first()
+                 if tp_model:
+                     tp_info = {
+                         "ticket_number": tp_model.ticket_number,
+                         "title": tp_model.title,
+                         "status": tp_model.jira_status,
+                         "due_day": tp_model.due_day
+                     }
+
             return {
                 "ticket_number": tcg.tcg_tickets,
                 "title": tcg.title,
@@ -265,6 +277,7 @@ def get_ticket_details(ticket_number: str):
                 "description": tcg.description, # TCG has description
                 "issue_type": tcg.issue_type,
                 "tp_number": tcg.tp_number,
+                "tp_info": tp_info, # Return detailed TP info
                 "fix_versions": tcg.fix_versions,
                 "sub_tasks": sub_tasks_details
             }

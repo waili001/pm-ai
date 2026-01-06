@@ -9,8 +9,9 @@
     1. 側邊欄 "Ticket Search" 選單。
     2. **頂部導航欄 (Top Navigation Bar)**: 位於右上角 User Avatar 左側的全域搜尋框。
 *   **操作**: 在搜尋框輸入 Ticket Number (例如 `TCG-125906` 或 `TP-4707`) 並按下 Enter 或搜尋按鈕。
-*   **大小寫轉換**: 系統會自動將輸入的搜尋字串轉換為大寫。
-*   **搜尋歷史 (Search History)**:
+*   **結果**:
+    *   **側邊欄入口**: 進入 Ticket Search 頁面顯示詳細資訊。
+    *   **頂部導航欄 (Top Bar)**: 若搜尋成功，直接彈出 **Ticket Detail Modal** 顯示詳細資訊 (與 Project Backlog 一致)，不離開當前頁面。
     *   系統會記錄最近 10 筆成功的搜尋紀錄。
     *   搜尋歷史以 Chip 形式顯示於搜尋框下方，點擊即可快速搜尋。
     *   搜尋歷史與最後一次搜尋結果會儲存於 LocalStorage (本地端)。
@@ -25,7 +26,7 @@
     *   Reporter (回報人)
     *   Issue Type (問題類型)
 *   **TCG 專屬欄位**:
-    *   **TP Number**: 關聯的 TP 單號。
+    *   **Related Project (TP)**: 若此 TCG 票券有對應的 TP，將顯示 TP 的詳細資訊 (Ticket Number, Name, Status, Due Day)。
     *   **Fix Version**: 修復版本。
 *   **Description (描述)**:
     *   支援 Jira 格式的標記語法 (Bold, Headers, Code Blocks, Links 等)，並渲染為 HTML 顯示。
