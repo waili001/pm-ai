@@ -44,7 +44,9 @@ def get_active_tps():
                 "ticket_number": t_num,
                 "title": title,
                 "label": label,
-                "status": tp.jira_status
+                "status": tp.jira_status,
+                "department": tp.department, # For filtering
+                "participated_dept": tp.participated_dept # For filtering
             })
         
         return results

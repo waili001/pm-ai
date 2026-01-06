@@ -41,10 +41,16 @@ const STATUS_ORDER = ["Open", "To Do", "In Progress", "Resolved", "Scheduled", "
 const STORAGE_KEY = 'project_backlog_last_selected';
 const HISTORY_STORAGE_KEY = 'project_backlog_recent_history';
 const MAX_HISTORY = 10;
+const DEPT_STORAGE_KEY = 'project_backlog_selected_dept';
 
 export default function ProjectBacklog() {
     const [activeTPs, setActiveTPs] = useState([]);
     const [selectedTP, setSelectedTP] = useState(null);
+    // Initialize from Storage or default to "ALL"
+    const [selectedDepartment, setSelectedDepartment] = useState(() => {
+        return localStorage.getItem(DEPT_STORAGE_KEY) || "ALL";
+    });
+    const [departmentsList, setDepartmentsList] = useState(["ALL"]); // List from API
     const [tickets, setTickets] = useState([]);
     const [loadingTPs, setLoadingTPs] = useState(false);
     const [loadingTickets, setLoadingTickets] = useState(false);
@@ -81,6 +87,16 @@ export default function ProjectBacklog() {
             return updated;
         });
     };
+
+    // Fetch Departments on Mount
+    useEffect(() => {
+        authenticatedFetch('/api/project/departments')
+            .then(res => res.json())
+            .then(data => {
+                setDepartmentsList(["ALL", ...data]);
+            })
+            .catch(err => console.error("Error fetching departments:", err));
+    }, []);
 
     // Fetch Active TPs on Mount
     useEffect(() => {
@@ -217,6 +233,20 @@ export default function ProjectBacklog() {
         return "default";
     };
 
+
+
+    // Filter TPs based on Selected Department
+    const filteredTPs = (selectedDepartment && selectedDepartment !== "ALL")
+        ? activeTPs.filter(tp => {
+            const matchesDept = tp.department && tp.department.includes(selectedDepartment);
+            const matchesParticipated = tp.participated_dept && tp.participated_dept.includes(selectedDepartment);
+            return matchesDept || matchesParticipated;
+        })
+        : activeTPs;
+
+    // Reset selected TP if it's no longer in the filtered list (Optional, but good UX)
+    // However, user might want to keep viewing a TP even if they change filter temporarily.
+    // Let's keep it simple: just filter the list options.
     return (
         <Box sx={{ width: '100%', px: 3, py: 0 }}>
             <Box sx={{ my: 4 }}>
@@ -224,13 +254,34 @@ export default function ProjectBacklog() {
                     Project Backlog
                 </Typography>
 
-                {/* TP Selector & Filter */}
                 <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <Box sx={{ minWidth: '250px' }}>
+                            <Autocomplete
+                                fullWidth
+                                options={departmentsList}
+                                value={selectedDepartment}
+                                onChange={(event, newValue) => {
+                                    const val = newValue || "ALL";
+                                    setSelectedDepartment(val);
+                                    localStorage.setItem(DEPT_STORAGE_KEY, val);
+                                    setSelectedTP(null);
+                                }}
+                                disableClearable
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Select Department"
+                                        variant="outlined"
+                                        helperText="Filter TPs by Dept"
+                                    />
+                                )}
+                            />
+                        </Box>
                         <Box sx={{ flexGrow: 1, minWidth: '300px' }}>
                             <Autocomplete
                                 fullWidth
-                                options={activeTPs}
+                                options={filteredTPs}
                                 getOptionLabel={(option) => option.label || ""}
                                 isOptionEqualToValue={(option, value) => option.id === value.id}
                                 value={selectedTP}
