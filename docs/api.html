@@ -203,6 +203,40 @@
                             }
                         }
                     },
+                    "/api/project/anomalies/my-pending": {
+                        "get": {
+                            "summary": "Get My Pending Anomalies",
+                            "description": "Fetch anomalies for the current logged-in user's department if they are a Manager/PM. Returns flag to show modal.",
+                            "responses": {
+                                "200": {
+                                    "description": "Anomalies status",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "show_modal": { "type": "boolean" },
+                                                    "anomalies": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": { "type": "integer" },
+                                                                "ticket_number": { "type": "string" },
+                                                                "ticket_title": { "type": "string" },
+                                                                "anomaly_reason": { "type": "string" },
+                                                                "detected_at": { "type": "integer" }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
                     "/api/project/anomalies": {
                         "get": {
                             "summary": "Get Ticket Anomalies",

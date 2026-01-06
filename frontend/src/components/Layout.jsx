@@ -36,6 +36,7 @@ import {
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { authenticatedFetch } from '../utils/api';
 import TicketDetailModal from './TicketDetailModal';
+import AnomalyReminderModal from './AnomalyReminderModal';
 
 const drawerWidth = 240;
 
@@ -51,6 +52,10 @@ export default function Layout() {
     const [searchModalOpen, setSearchModalOpen] = useState(false);
     const [searchedTicket, setSearchedTicket] = useState(null);
 
+    // Anomaly Reminder State
+    const [reminderOpen, setReminderOpen] = useState(false);
+    const [pendingAnomalies, setPendingAnomalies] = useState([]);
+
     useEffect(() => {
         // Fetch User Info & Permissions
         authenticatedFetch('/api/auth/me')
@@ -63,6 +68,25 @@ export default function Layout() {
             })
             .catch(err => console.error("Failed to fetch user info", err));
     }, []);
+
+    // Check for Pending Anomalies (Once per session)
+    useEffect(() => {
+        if (user.username && user.username !== 'User') {
+            const hasChecked = sessionStorage.getItem('hasCheckedAnomalies');
+            if (!hasChecked) {
+                authenticatedFetch('/api/project/anomalies/my-pending')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.show_modal) {
+                            setPendingAnomalies(data.anomalies);
+                            setReminderOpen(true);
+                        }
+                        sessionStorage.setItem('hasCheckedAnomalies', 'true');
+                    })
+                    .catch(err => console.error("Failed to check anomalies", err));
+            }
+        }
+    }, [user.username]);
 
     const handleAdminClick = () => {
         setAdminOpen(!adminOpen);
@@ -80,6 +104,7 @@ export default function Layout() {
         handleCloseUserMenu();
         localStorage.removeItem('auth_token');
         localStorage.removeItem('username');
+        sessionStorage.removeItem('hasCheckedAnomalies'); // Clear session check on logout
         navigate('/login');
     };
 
@@ -381,6 +406,12 @@ export default function Layout() {
                 open={searchModalOpen}
                 onClose={() => setSearchModalOpen(false)}
                 ticket={searchedTicket}
+            />
+
+            <AnomalyReminderModal
+                open={reminderOpen}
+                onClose={() => setReminderOpen(false)}
+                anomalies={pendingAnomalies}
             />
         </Box >
     );

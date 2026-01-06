@@ -1,7 +1,11 @@
-from fastapi import APIRouter
-from backend.shared.database import SessionLocal
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from backend.shared.database import SessionLocal, get_db
 from backend.features.project.persistence.models import LarkModelTP, LarkModelTCG, LarkModelProgram, TicketAnomaly
 from backend.features.system.persistence.models import LarkModelDept
+from backend.features.member.persistence.models import LarkModelMember
+from backend.features.auth.persistence.models import AdminUser
+from backend.shared.dependencies import get_current_user
 from typing import List, Optional
 from pydantic import BaseModel
 
@@ -316,11 +320,71 @@ def get_departments():
     finally:
         db.close()
 
+@router.get("/anomalies/my-pending")
+def get_my_pending_anomalies(
+    current_user: AdminUser = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Check if the current user (Manager/PM) has pending anomalies in their department.
+    """
+    # 1. Identify User in Member Info
+    # Use full name or username to match Lark Member
+    # Strict matching required
+    user_name = current_user.full_name or current_user.username
+    if not user_name:
+        return {"show_modal": False, "anomalies": []}
+
+    member = db.query(LarkModelMember).filter(
+        (LarkModelMember.name == user_name)
+    ).first()
+
+    if not member:
+        return {"show_modal": False, "anomalies": [], "reason": "Member not found"}
+
+    # 2. Check Role Constraints
+    # Target Roles: Manager, Assistant Manager, PM
+    # Position field in LarkModelMember
+    target_positions = ["Manager", "Assistant Manager", "PM"]
+    
+    # Simple check: is user's position exactly one of these?
+    # Or contains? "Project Manager" -> "PM"? Requirement says "PM". 
+    # Assuming exact match or part of string. Let's use exact from requirement first, 
+    # but "Project Manager" is more likely in real data. 
+    # Let's check for 'Manager' substring or 'PM' substring to be safe but correct?
+    # Req: "Manager / Assistant Manager / PM"
+    
+    user_pos = (member.position or "").strip()
+    
+    is_eligible = False
+    if user_pos in target_positions:
+        is_eligible = True
+    elif "Project Manager" in user_pos: # Handle "PM" expanded
+        is_eligible = True
+    
+    if not is_eligible:
+        return {"show_modal": False, "anomalies": [], "reason": "Role not eligible"}
+
+    # 3. Fetch Anomalies for Department
+    user_dept = member.department
+    if not user_dept:
+         return {"show_modal": False, "anomalies": [], "reason": "No department found"}
+         
+    anomalies = db.query(TicketAnomaly).filter(
+        TicketAnomaly.department == user_dept
+    ).order_by(TicketAnomaly.detected_at.desc()).all()
+    
+    if not anomalies:
+        return {"show_modal": False, "anomalies": []}
+        
+    return {"show_modal": True, "anomalies": anomalies}
+
 @router.get("/anomalies")
 def get_ticket_anomalies(department: Optional[str] = None):
     """
     Get all detected ticket anomalies.
     Optional Filter: department
+    Default: Excludes 'WRD' department if no filter provided.
     """
     db = SessionLocal()
     try:
@@ -328,6 +392,10 @@ def get_ticket_anomalies(department: Optional[str] = None):
         
         if department:
             query = query.filter(TicketAnomaly.department == department)
+        else:
+            # User Requirement (2024-01-06): Default view should exclude 'WRD'
+            # Note: case-insensitive check generally safer, but let's stick to standard if consistent
+            query = query.filter(TicketAnomaly.department != "WRD")
             
         anomalies = query.order_by(TicketAnomaly.detected_at.desc()).all()
         return anomalies
