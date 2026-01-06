@@ -1,0 +1,17 @@
+
+        <div id="get-project-dashboard-stats" class="endpoint">
+            <h3>GET /api/project/dashboard-stats</h3>
+            <p><strong>Summary:</strong> Get statistics for Dashboard.</p>
+            <p><strong>Description:</strong> Returns aggregated data for the dashboard, specifically Closed/Resolved TP counts per Quarter (Last 4 Quarters) based on <code>released_date</code>.</p>
+            <p><strong>Parameters:</strong></p>
+            <ul>
+                <li><code>department</code> (query, optional): Filter by department.</li>
+            </ul>
+            <p><strong>Responses:</strong></p>
+            <pre><code>
+{
+  "categories": ["2024 Q1", "2024 Q2", "2024 Q3", "2024 Q4"],
+  "data": [10, 15, 8, 12]
+}
+            </code></pre>
+        </div>

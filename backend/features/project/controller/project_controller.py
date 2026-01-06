@@ -18,6 +18,33 @@ router = APIRouter(
     tags=["Project"]
 )
 
+from backend.features.project.service.project_service import ProjectService
+
+@router.get("/dashboard-stats")
+def get_dashboard_stats(
+    department: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Get statistics for Dashboard.
+    Current Metric: Closed/Resolved TP counts per Quarter (Last 4 Quarters).
+    """
+    service = ProjectService(db)
+    return service.get_dashboard_stats(department)
+
+@router.get("/closed-tps")
+def get_closed_tps(
+    quarter: str,
+    department: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Get list of Closed TPs for a specific quarter.
+    Used for Dashboard drill-down.
+    """
+    service = ProjectService(db)
+    return service.get_closed_tps(quarter, department)
+
 @router.get("/active")
 def get_active_tps():
     """Fetch all active TP projects (Status != Closed/Resolved)."""

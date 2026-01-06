@@ -71,6 +71,46 @@
                             }
                         }
                     },
+                    "/api/project/dashboard-stats": {
+                        "get": {
+                            "summary": "Get Dashboard Statistics",
+                            "description": "Fetch aggregated data for the dashboard (Closed TP Count by Quarter).",
+                            "parameters": [
+                                {
+                                    "name": "department",
+                                    "in": "query",
+                                    "required": false,
+                                    "schema": { "type": "string" }
+                                }
+                            ],
+                            "responses": {
+                                "200": { "description": "Dashboard stats" }
+                            }
+                        }
+                    },
+                    "/api/project/closed-tps": {
+                        "get": {
+                            "summary": "Get Closed TPs by Quarter",
+                            "description": "Fetch list of Closed/Resolved TPs for a specific quarter.",
+                            "parameters": [
+                                {
+                                    "name": "quarter",
+                                    "in": "query",
+                                    "required": true,
+                                    "schema": { "type": "string", "example": "2024 Q4" }
+                                },
+                                {
+                                    "name": "department",
+                                    "in": "query",
+                                    "required": false,
+                                    "schema": { "type": "string" }
+                                }
+                            ],
+                            "responses": {
+                                "200": { "description": "List of Closed TPs" }
+                            }
+                        }
+                    },
                     "/api/project/programs": {
                         "get": {
                             "summary": "Get Programs",

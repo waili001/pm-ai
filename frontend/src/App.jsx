@@ -5,6 +5,7 @@ import { authenticatedFetch } from './utils/api';
 import Login from './pages/Login';
 import TicketSearch from './pages/TicketSearch';
 import TicketAnomaly from './pages/TicketAnomaly';
+import Home from './pages/Home';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import SqliteAdmin from './pages/SqliteAdmin';
@@ -27,46 +28,6 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-function Home() {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    authenticatedFetch('/api/data')
-      .then(response => response.json())
-      .then(data => {
-        setData(data)
-        setLoading(false)
-      })
-      .catch(error => {
-        console.error('Error fetching data:', error)
-        setLoading(false)
-      })
-  }, [])
-
-  return (
-    <Box sx={{ width: '100%', px: 3, py: 0 }} bgcolor="white">
-      <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Dashboard
-        </Typography>
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Backend Connection Status:
-          </Typography>
-          {loading ? (
-            <Typography>Loading...</Typography>
-          ) : (
-            <Typography color={data ? "success.main" : "error"}>
-              {data ? data.data : "Failed to connect to backend"}
-            </Typography>
-          )}
-        </Paper>
-
-      </Box>
-    </Box>
-  )
-}
 
 function App() {
   return (
