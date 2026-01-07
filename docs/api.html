@@ -84,7 +84,30 @@
                                 }
                             ],
                             "responses": {
-                                "200": { "description": "Dashboard stats" }
+                                "200": {
+                                    "description": "Dashboard stats",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "categories": {
+                                                        "type": "array",
+                                                        "items": { "type": "string" }
+                                                    },
+                                                    "data": {
+                                                        "type": "array",
+                                                        "items": { "type": "integer" }
+                                                    },
+                                                    "icr_data": {
+                                                        "type": "array",
+                                                        "items": { "type": "integer" }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     },

@@ -192,6 +192,50 @@ export default function Home() {
         credits: { enabled: false }
     };
 
+    const icrChartOptions = {
+        chart: {
+            type: 'column',
+            backgroundColor: 'transparent',
+            spacingBottom: 30,
+            spacingLeft: 20
+        },
+        title: {
+            text: 'ICR Count Overview',
+            style: { fontSize: '14px' }
+        },
+        xAxis: {
+            categories: stats?.categories || [],
+            crosshair: true,
+            labels: {
+                style: { fontSize: '11px' }
+            }
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: 'ICR Count'
+            },
+            allowDecimals: false
+        },
+        tooltip: {
+            shared: true
+        },
+        plotOptions: {
+            column: {
+                pointPadding: 0.2,
+                borderWidth: 0,
+                dataLabels: { enabled: true }
+            }
+        },
+        series: [{
+            name: 'ICR Count',
+            data: stats?.icr_data || [],
+            color: '#ff9800'
+        }],
+        credits: { enabled: false }
+    };
+
+
     const headCells = [
         { id: 'ticket_number', label: 'Ticket No' },
         { id: 'title', label: 'Title' },
@@ -202,7 +246,7 @@ export default function Home() {
     ];
 
     return (
-        <Box sx={{ width: '100%', p: 3 }} bgcolor="#f5f5f5" minHeight="100vh">
+        <Box sx={{ width: '100%', p: 3 }} bgcolor="#f5f5f5" minHeight="100vh" >
             <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#1a237e' }}>
                     Dashboard
@@ -240,8 +284,19 @@ export default function Home() {
 
                 {/* Placeholders */}
                 <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-                    <Paper elevation={0} sx={{ p: 2, height: '320px', bgcolor: 'transparent', border: '2px dashed #e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2 }}>
-                        <Typography color="text.secondary">Empty Slot</Typography>
+                    <Paper elevation={2} sx={{ p: 2, height: '400px', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
+                        <Typography variant="h6" gutterBottom sx={{ fontSize: '1rem', fontWeight: 600 }}>
+                            ICR Count Overview
+                        </Typography>
+                        <Box sx={{ flexGrow: 1, minHeight: 0 }}>
+                            {stats && (
+                                <HighchartsReact
+                                    highcharts={Highcharts}
+                                    options={icrChartOptions}
+                                    containerProps={{ style: { height: "100%" } }}
+                                />
+                            )}
+                        </Box>
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6, lg: 4 }}>
@@ -356,6 +411,6 @@ export default function Home() {
                     )}
                 </DialogContent>
             </Dialog>
-        </Box>
+        </Box >
     );
 }

@@ -72,6 +72,7 @@ class ProjectService:
         
         target_quarters.reverse() # Ascending order
         stats = {q: 0 for q in target_quarters}
+        icr_stats = {q: 0 for q in target_quarters}
 
         for tp in tps:
             d_obj = self._parse_date(tp.released_date)
@@ -79,10 +80,17 @@ class ProjectService:
                 q_str = self._get_quarter(d_obj)
                 if q_str in stats:
                     stats[q_str] += 1
+                    
+                    # Logic for ICR Count Chart
+                    # "display the total sum of the icr_count of TPs where TP project type is ICR"
+                    if tp.project_type == "ICR":
+                         icr_count = tp.icr_count or 0 # Handle None
+                         icr_stats[q_str] += icr_count
         
         return {
             "categories": list(stats.keys()),
-            "data": list(stats.values())
+            "data": list(stats.values()),
+            "icr_data": list(icr_stats.values())
         }
 
     def get_closed_tps(self, quarter: str, department: str = None):
